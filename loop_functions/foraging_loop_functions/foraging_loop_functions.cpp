@@ -1,6 +1,4 @@
 #include "foraging_loop_functions.h"
-#include <argos3/core/simulator/simulator.h>
-#include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/plugins/robots/foot-bot/simulator/footbot_entity.h>
 #include <controllers/footbot_foraging/footbot_foraging.h>
 
