@@ -121,8 +121,9 @@ void CForagingLoopFunctions::PreStep() {
       else ++unRestingFBs;
       /* Get the position of the foot-bot on the ground as a CVector2 */
       CVector2 cPos;
-      cPos.Set(cFootBot.GetEmbodiedEntity().GetOriginAnchor().Position.GetX(),
-               cFootBot.GetEmbodiedEntity().GetOriginAnchor().Position.GetY());
+       cPos.Set(cFootBot.GetEmbodiedEntity().GetOriginAnchor().Position.GetX(),
+                cFootBot.GetEmbodiedEntity().GetOriginAnchor().Position.GetY());
+
       /* Get food data */
       CFootBotForaging::SFoodData& sFoodData = cController.GetFoodData();
       /* The foot-bot has a food item */
@@ -154,8 +155,8 @@ void CForagingLoopFunctions::PreStep() {
                   /* If so, we move that item out of sight */
                   m_cFoodPos[i].Set(100.0f, 100.f);
                   /* The foot-bot is now carrying an item */
-                  sFoodData.HasFoodItem = true;
-                  sFoodData.FoodItemIdx = i;
+                  //sFoodData.HasFoodItem = true;
+                  //sFoodData.FoodItemIdx = i;
                   /* The floor texture must be updated */
                   m_pcFloor->SetChanged();
                   /* We are done */

@@ -29,6 +29,9 @@
         <footbot_light implementation="rot_z_only" show_rays="false" />
         <footbot_motor_ground implementation="rot_z_only" />
         <range_and_bearing implementation="medium" medium="rab" />
+          <colored_blob_perspective_camera implementation="default"
+                                             medium="objects"
+                                             show_rays="true" />
       </sensors>
       <params>
         <diffusion go_straight_angle_range="-5:5"
@@ -126,13 +129,13 @@
     <distribute>
       <position method="uniform" min="-1,-2,0" max="2,2,0" />
       <orientation method="constant" values="0,0,0" />
-      <entity quantity="15" max_trials="100">
+      <entity quantity="1" max_trials="100">
         <cylinder id="c" height="0.5" radius="0.1" mass="0.1" movable="true">
-          <leds medium="leds">
-            <led offset=" 0.0, 0.1,0.2" anchor="origin" color="red" />
-            <led offset=" 0.1, 0,  0.2" anchor="origin" color="red"   />
-            <led offset=" 0.0,-0.1,0.2" anchor="origin" color="red"  />
-            <led offset="-0.1, 0,  0.2" anchor="origin" color="red" />
+          <leds medium="objects">
+            <led offset=" 0.0, 0.1,0.15" anchor="origin" color="red" />
+            <led offset=" 0.1, 0,  0.15" anchor="origin" color="red"   />
+            <led offset=" 0.0,-0.1,0.15" anchor="origin" color="red"  />
+            <led offset="-0.1, 0,  0.15" anchor="origin" color="red" />
           </leds>
         </cylinder>
       </entity>
@@ -153,6 +156,7 @@
   <media>
     <range_and_bearing id="rab" />
     <led id="leds" />
+      <led id="objects" />
   </media>
 
   <!-- ****************** -->
@@ -165,7 +169,15 @@
                    position="0,0,4.34"
                    look_at="0,0,0"
                    lens_focal_length="20" />
-      </camera>
+          <placement idx="1"
+                     position="2,-2,0.7"
+                     look_at="0,0,0"
+                     lens_focal_length="20" />
+            <placement idx="2"
+                       position="0,2,0.7"
+                       look_at="0,0,0"
+                       lens_focal_length="20" />
+        </camera>
       <user_functions label="foraging_qt_user_functions" />
     </qt-opengl>
   </visualization>

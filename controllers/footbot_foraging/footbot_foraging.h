@@ -21,6 +21,8 @@
 #include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
 /* Definition of the range and bearing actuator */
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_actuator.h>
+
+#include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_gripper_actuator.h>
 /* Definition of the range and bearing sensor */
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
 /* Definition of the foot-bot proximity sensor */
@@ -29,6 +31,8 @@
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_light_sensor.h>
 /* Definition of the foot-bot motor ground sensor */
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_motor_ground_sensor.h>
+
+#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_perspective_camera_sensor.h>
 /* Definitions for random number generation */
 #include <argos3/core/utility/math/rng.h>
 
@@ -293,6 +297,8 @@ private:
    CCI_LEDsActuator* m_pcLEDs;
    /* Pointer to the range and bearing actuator */
    CCI_RangeAndBearingActuator*  m_pcRABA;
+/* Pointer to the foot-bot gripper actuator */
+    CCI_FootBotGripperActuator* m_pcGripper;
    /* Pointer to the range and bearing sensor */
    CCI_RangeAndBearingSensor* m_pcRABS;
    /* Pointer to the foot-bot proximity sensor */
@@ -302,6 +308,7 @@ private:
    /* Pointer to the foot-bot motor ground sensor */
    CCI_FootBotMotorGroundSensor* m_pcGround;
 
+   CCI_ColoredBlobPerspectiveCameraSensor* m_pcCamera;
    /* The random number generator */
    CRandom::CRNG* m_pcRNG;
 
@@ -322,6 +329,7 @@ private:
    /* The food data */
    SFoodData m_sFoodData;
 
+    CVector2 getNearestBlobVector() const;
 };
 
 #endif

@@ -7,6 +7,7 @@
 /* Logging */
 #include <argos3/core/utility/logging/argos_log.h>
 
+
 /****************************************/
 /****************************************/
 
@@ -107,10 +108,12 @@ CFootBotForaging::CFootBotForaging() :
    m_pcWheels(NULL),
    m_pcLEDs(NULL),
    m_pcRABA(NULL),
+   m_pcGripper(NULL),
    m_pcRABS(NULL),
    m_pcProximity(NULL),
    m_pcLight(NULL),
    m_pcGround(NULL),
+   m_pcCamera(NULL),
    m_pcRNG(NULL) {}
 
 /****************************************/
@@ -124,10 +127,12 @@ void CFootBotForaging::Init(TConfigurationNode& t_node) {
       m_pcWheels    = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
       m_pcLEDs      = GetActuator<CCI_LEDsActuator                >("leds"                 );
       m_pcRABA      = GetActuator<CCI_RangeAndBearingActuator     >("range_and_bearing"    );
+      m_pcGripper   = GetActuator<CCI_FootBotGripperActuator      >("footbot_gripper"      );
       m_pcRABS      = GetSensor  <CCI_RangeAndBearingSensor       >("range_and_bearing"    );
       m_pcProximity = GetSensor  <CCI_FootBotProximitySensor      >("footbot_proximity"    );
       m_pcLight     = GetSensor  <CCI_FootBotLightSensor          >("footbot_light"        );
       m_pcGround    = GetSensor  <CCI_FootBotMotorGroundSensor    >("footbot_motor_ground" );
+       m_pcCamera = GetSensor <CCI_ColoredBlobPerspectiveCameraSensor>("colored_blob_perspective_camera");
       /*
        * Parse XML parameters
        */
@@ -383,6 +388,7 @@ void CFootBotForaging::Rest() {
 /****************************************/
 
 void CFootBotForaging::Explore() {
+   m_pcCamera->Enable();;
    /* We switch to 'return to nest' in two situations:
     * 1. if we have a food item
     * 2. if we have not found a food item for some time;
@@ -430,6 +436,7 @@ void CFootBotForaging::Explore() {
       m_sStateData.TimeExploringUnsuccessfully = 0;
       m_sStateData.TimeSearchingForPlaceInNest = 0;
       m_pcLEDs->SetAllColors(CColor::BLUE);
+      m_pcCamera->Disable();
       m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
    }
    else {
@@ -438,7 +445,14 @@ void CFootBotForaging::Explore() {
       UpdateState();
       /* Get the diffusion vector to perform obstacle avoidance */
       bool bCollision;
-      CVector2 cDiffusion = DiffusionVector(bCollision);
+       CVector2 cMove = getNearestBlobVector();
+
+       //If no blobs detected, do diffusion
+       if(cMove.Length() == 0) {
+           //cMove = DiffusionVector(bCollision);
+           cMove.SetX(1);
+       }
+
       /* Apply the collision rule, if a collision avoidance happened */
       if(bCollision) {
          /* Collision avoidance happened, increase ExploreToRestProb and
@@ -447,7 +461,11 @@ void CFootBotForaging::Explore() {
          m_sStateData.ProbRange.TruncValue(m_sStateData.ExploreToRestProb);
          m_sStateData.RestToExploreProb -= m_sStateData.CollisionRuleExploreToRestDeltaProb;
          m_sStateData.ProbRange.TruncValue(m_sStateData.RestToExploreProb);
+          if( "fb6" == this->GetId())
+          LOG << "collision!" << std::endl;
       }
+
+
       /*
        * If we are in the nest, we combine antiphototaxis with obstacle
        * avoidance
@@ -460,14 +478,42 @@ void CFootBotForaging::Explore() {
           * from the light.
           */
          SetWheelSpeedsFromVector(
-            m_sWheelTurningParams.MaxSpeed * cDiffusion -
+            m_sWheelTurningParams.MaxSpeed * cMove -
             m_sWheelTurningParams.MaxSpeed * 0.25f * CalculateVectorToLight());
       }
       else {
          /* Use the diffusion vector only */
-         SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cDiffusion);
+         SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove);
       }
    }
+}
+
+CVector2 CFootBotForaging::getNearestBlobVector() const {
+    CVector2 cMove;
+    const CCI_ColoredBlobPerspectiveCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
+    if(camReadings.BlobList.empty()) {
+        return cMove;
+    }
+    for (auto& blob : camReadings.BlobList) {
+       CVector2 blobV(blob->X,blob->Y);
+       if(blobV.Length() < cMove.Length() || cMove.Length() == 0){
+           cMove = blobV;
+       }
+    }
+
+    if( "fb6" == GetId()) {
+       if(camReadings.BlobList.size() > 0) {
+           for (CCI_ColoredBlobPerspectiveCameraSensor::SBlob* reading: camReadings.BlobList) {
+               LOG << reading->X << "," << reading->Y << std::endl;
+
+           }
+       }
+    }
+
+    // rotate by ~40deg , cause frontsensor is not front.
+    cMove.Rotate(CRadians(-0.7));
+    cMove.Normalize();
+    return cMove;
 }
 
 /****************************************/
