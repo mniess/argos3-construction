@@ -1,12 +1,4 @@
-/* Include the controller definition */
 #include "footbot_foraging.h"
-/* Function definitions for XML parsing */
-#include <argos3/core/utility/configuration/argos_configuration.h>
-/* 2D vector definition */
-#include <argos3/core/utility/math/vector2.h>
-/* Logging */
-#include <argos3/core/utility/logging/argos_log.h>
-
 
 /****************************************/
 /****************************************/
@@ -105,16 +97,16 @@ void CFootBotForaging::SStateData::Reset() {
 /****************************************/
 
 CFootBotForaging::CFootBotForaging() :
-   m_pcWheels(NULL),
-   m_pcLEDs(NULL),
-   m_pcRABA(NULL),
-   m_pcGripper(NULL),
-   m_pcRABS(NULL),
-   m_pcProximity(NULL),
-   m_pcLight(NULL),
-   m_pcGround(NULL),
-   m_pcCamera(NULL),
-   m_pcRNG(NULL) {}
+   m_pcWheels(nullptr),
+   m_pcLEDs(nullptr),
+   m_pcRABA(nullptr),
+   m_pcGripper(nullptr),
+   m_pcRABS(nullptr),
+   m_pcProximity(nullptr),
+   m_pcLight(nullptr),
+   m_pcGround(nullptr),
+   m_pcCamera(nullptr),
+   m_pcRNG(nullptr) {}
 
 /****************************************/
 /****************************************/
@@ -230,17 +222,11 @@ CVector2 CFootBotForaging::CalculateVectorToLight() {
    const CCI_FootBotLightSensor::TReadings& tLightReads = m_pcLight->GetReadings();
    /* Sum them together */
    CVector2 cAccumulator;
-   for(size_t i = 0; i < tLightReads.size(); ++i) {
-      cAccumulator += CVector2(tLightReads[i].Value, tLightReads[i].Angle);
+   for (auto tLightRead : tLightReads) {
+      cAccumulator += CVector2(tLightRead.Value, tLightRead.Angle);
    }
    /* If the light was perceived, return the vector */
-   if(cAccumulator.Length() > 0.0f) {
-      return CVector2(1.0f, cAccumulator.Angle());
-   }
-   /* Otherwise, return zero */
-   else {
-      return CVector2();
-   }
+    return cAccumulator.Length() > 0.0f ? CVector2(1.0f, cAccumulator.Angle()) : CVector2();
 }
 
 /****************************************/
@@ -251,8 +237,8 @@ CVector2 CFootBotForaging::DiffusionVector(bool& b_collision) {
    const CCI_FootBotProximitySensor::TReadings& tProxReads = m_pcProximity->GetReadings();
    /* Sum them together */
    CVector2 cDiffusionVector;
-   for(size_t i = 0; i < tProxReads.size(); ++i) {
-      cDiffusionVector += CVector2(tProxReads[i].Value, tProxReads[i].Angle);
+   for (auto tProxRead : tProxReads) {
+      cDiffusionVector += CVector2(tProxRead.Value, tProxRead.Angle);
    }
    /* If the angle of the vector is small enough and the closest obstacle
       is far enough, ignore the vector and go straight, otherwise return
@@ -302,7 +288,7 @@ void CFootBotForaging::SetWheelSpeedsFromVector(const CVector2& c_heading) {
       }
    }
    /* Wheel speeds based on current turning state */
-   Real fSpeed1, fSpeed2;
+   Real fSpeed1 = 0, fSpeed2 = 0;
    switch(m_sWheelTurningParams.TurningMechanism) {
       case SWheelTurningParams::NO_TURN: {
          /* Just go straight */
@@ -344,44 +330,8 @@ void CFootBotForaging::SetWheelSpeedsFromVector(const CVector2& c_heading) {
 /****************************************/
 
 void CFootBotForaging::Rest() {
-   /* If we have stayed here enough, probabilistically switch to
-    * 'exploring' */
-   if(m_sStateData.TimeRested > m_sStateData.MinimumRestingTime &&
-      m_pcRNG->Uniform(m_sStateData.ProbRange) < m_sStateData.RestToExploreProb) {
       m_pcLEDs->SetAllColors(CColor::GREEN);
       m_sStateData.State = SStateData::STATE_EXPLORING;
-      m_sStateData.TimeRested = 0;
-   }
-   else {
-      ++m_sStateData.TimeRested;
-      /* Be sure not to send the last exploration result multiple times */
-      if(m_sStateData.TimeRested == 1) {
-         m_pcRABA->SetData(0, LAST_EXPLORATION_NONE);
-      }
-      /*
-       * Social rule: listen to what other people have found and modify
-       * probabilities accordingly
-       */
-      const CCI_RangeAndBearingSensor::TReadings& tPackets = m_pcRABS->GetReadings();
-      for(size_t i = 0; i < tPackets.size(); ++i) {
-         switch(tPackets[i].Data[0]) {
-            case LAST_EXPLORATION_SUCCESSFUL: {
-               m_sStateData.RestToExploreProb += m_sStateData.SocialRuleRestToExploreDeltaProb;
-               m_sStateData.ProbRange.TruncValue(m_sStateData.RestToExploreProb);
-               m_sStateData.ExploreToRestProb -= m_sStateData.SocialRuleExploreToRestDeltaProb;
-               m_sStateData.ProbRange.TruncValue(m_sStateData.ExploreToRestProb);
-               break;
-            }
-            case LAST_EXPLORATION_UNSUCCESSFUL: {
-               m_sStateData.ExploreToRestProb += m_sStateData.SocialRuleExploreToRestDeltaProb;
-               m_sStateData.ProbRange.TruncValue(m_sStateData.ExploreToRestProb);
-               m_sStateData.RestToExploreProb -= m_sStateData.SocialRuleRestToExploreDeltaProb;
-               m_sStateData.ProbRange.TruncValue(m_sStateData.RestToExploreProb);
-               break;
-            }
-         }
-      }
-   }
 }
 
 /****************************************/
@@ -389,100 +339,29 @@ void CFootBotForaging::Rest() {
 
 void CFootBotForaging::Explore() {
    m_pcCamera->Enable();;
-   /* We switch to 'return to nest' in two situations:
-    * 1. if we have a food item
-    * 2. if we have not found a food item for some time;
-    *    in this case, the switch is probabilistic
-    */
-   bool bReturnToNest(false);
-   /*
-    * Test the first condition: have we found a food item?
-    * NOTE: the food data is updated by the loop functions, so
-    * here we just need to read it
-    */
+
    if(m_sFoodData.HasFoodItem) {
-      /* Apply the food rule, decreasing ExploreToRestProb and increasing
-       * RestToExploreProb */
-      m_sStateData.ExploreToRestProb -= m_sStateData.FoodRuleExploreToRestDeltaProb;
-      m_sStateData.ProbRange.TruncValue(m_sStateData.ExploreToRestProb);
-      m_sStateData.RestToExploreProb += m_sStateData.FoodRuleRestToExploreDeltaProb;
-      m_sStateData.ProbRange.TruncValue(m_sStateData.RestToExploreProb);
-      /* Store the result of the expedition */
-      m_eLastExplorationResult = LAST_EXPLORATION_SUCCESSFUL;
-      /* Switch to 'return to nest' */
-      bReturnToNest = true;
-   }
-   /* Test the second condition: we probabilistically switch to 'return to
-    * nest' if we have been wandering for some time and found nothing */
-   else if(m_sStateData.TimeExploringUnsuccessfully > m_sStateData.MinimumUnsuccessfulExploreTime) {
-      if (m_pcRNG->Uniform(m_sStateData.ProbRange) < m_sStateData.ExploreToRestProb) {
-         /* Store the result of the expedition */
-         m_eLastExplorationResult = LAST_EXPLORATION_UNSUCCESSFUL;
-         /* Switch to 'return to nest' */
-         bReturnToNest = true;
-      }
-      else {
-         /* Apply the food rule, increasing ExploreToRestProb and
-          * decreasing RestToExploreProb */
-         m_sStateData.ExploreToRestProb += m_sStateData.FoodRuleExploreToRestDeltaProb;
-         m_sStateData.ProbRange.TruncValue(m_sStateData.ExploreToRestProb);
-         m_sStateData.RestToExploreProb -= m_sStateData.FoodRuleRestToExploreDeltaProb;
-         m_sStateData.ProbRange.TruncValue(m_sStateData.RestToExploreProb);
-      }
-   }
-   /* So, do we return to the nest now? */
-   if(bReturnToNest) {
-      /* Yes, we do! */
-      m_sStateData.TimeExploringUnsuccessfully = 0;
-      m_sStateData.TimeSearchingForPlaceInNest = 0;
       m_pcLEDs->SetAllColors(CColor::BLUE);
       m_pcCamera->Disable();
       m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
    }
    else {
-      /* No, perform the actual exploration */
-      ++m_sStateData.TimeExploringUnsuccessfully;
+      /* perform the actual exploration */
       UpdateState();
-      /* Get the diffusion vector to perform obstacle avoidance */
-      bool bCollision;
        CVector2 cMove = getNearestBlobVector();
 
-       //If no blobs detected, do diffusion
+       //If no blobs detected, go straight
        if(cMove.Length() == 0) {
            //cMove = DiffusionVector(bCollision);
-           cMove.SetX(1);
+           cMove = CVector2::X;
        }
-
-      /* Apply the collision rule, if a collision avoidance happened */
-      if(bCollision) {
-         /* Collision avoidance happened, increase ExploreToRestProb and
-          * decrease RestToExploreProb */
-         m_sStateData.ExploreToRestProb += m_sStateData.CollisionRuleExploreToRestDeltaProb;
-         m_sStateData.ProbRange.TruncValue(m_sStateData.ExploreToRestProb);
-         m_sStateData.RestToExploreProb -= m_sStateData.CollisionRuleExploreToRestDeltaProb;
-         m_sStateData.ProbRange.TruncValue(m_sStateData.RestToExploreProb);
-          if( "fb6" == this->GetId())
-          LOG << "collision!" << std::endl;
-      }
-
-
-      /*
-       * If we are in the nest, we combine antiphototaxis with obstacle
-       * avoidance
-       * Outside the nest, we just use the diffusion vector
-       */
-      if(m_sStateData.InNest) {
-         /*
-          * The vector returned by CalculateVectorToLight() points to
-          * the light. Thus, the minus sign is because we want to go away
-          * from the light.
-          */
+       //cMove += DiffusionVector(bCollision)*0.50; cMove.Normalize();
+      if(m_sStateData.InNest) { //Diffustion+Antiphototaxis
          SetWheelSpeedsFromVector(
             m_sWheelTurningParams.MaxSpeed * cMove -
             m_sWheelTurningParams.MaxSpeed * 0.25f * CalculateVectorToLight());
       }
       else {
-         /* Use the diffusion vector only */
          SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove);
       }
    }
@@ -498,15 +377,6 @@ CVector2 CFootBotForaging::getNearestBlobVector() const {
        CVector2 blobV(blob->X,blob->Y);
        if(blobV.Length() < cMove.Length() || cMove.Length() == 0){
            cMove = blobV;
-       }
-    }
-
-    if( "fb6" == GetId()) {
-       if(camReadings.BlobList.size() > 0) {
-           for (CCI_ColoredBlobPerspectiveCameraSensor::SBlob* reading: camReadings.BlobList) {
-               LOG << reading->X << "," << reading->Y << std::endl;
-
-           }
        }
     }
 
