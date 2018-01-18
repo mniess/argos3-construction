@@ -329,7 +329,7 @@ private:
    /* The food data */
    SFoodData m_sFoodData;
 
-    CVector2 getNearestBlobVector() const;
+    CVector2 NearestLed(CColor color) const;
 };
 
 #endif

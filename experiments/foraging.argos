@@ -8,7 +8,7 @@
     <system threads="0" />
     <experiment length="0"
                 ticks_per_second="10"
-                random_seed="123" />
+                random_seed="1233" />
   </framework>
 
   <!-- *************** -->
@@ -25,12 +25,12 @@
         <footbot_gripper implementation="default" />
       </actuators>
       <sensors>
-        <footbot_proximity implementation="default" show_rays="false" />
+        <footbot_proximity implementation="default" show_rays="true" />
         <footbot_light implementation="rot_z_only" show_rays="false" />
         <footbot_motor_ground implementation="rot_z_only" />
         <range_and_bearing implementation="medium" medium="rab" />
           <colored_blob_perspective_camera implementation="default"
-                                             medium="objects"
+                                             medium="leds"
                                              show_rays="true" />
       </sensors>
       <params>
@@ -119,7 +119,7 @@
     <distribute>
       <position method="uniform" min="-2,-2,0" max="-1,2,0" />
       <orientation method="uniform" min="0,0,0" max="360,0,0" />
-      <entity quantity="20" max_trials="100">
+      <entity quantity="10" max_trials="100">
         <foot-bot id="fb">
           <controller config="ffc" />
         </foot-bot>
@@ -131,11 +131,15 @@
       <orientation method="constant" values="0,0,0" />
       <entity quantity="1" max_trials="100">
         <cylinder id="c" height="0.5" radius="0.1" mass="0.1" movable="true">
-          <leds medium="objects">
-            <led offset=" 0.0, 0.1,0.15" anchor="origin" color="red" />
-            <led offset=" 0.1, 0,  0.15" anchor="origin" color="red"   />
-            <led offset=" 0.0,-0.1,0.15" anchor="origin" color="red"  />
-            <led offset="-0.1, 0,  0.15" anchor="origin" color="red" />
+          <leds medium="leds">
+            <led offset=" 0.0, 0.1,0.15" anchor="origin" color="purple" />
+            <led offset=" 0.1, 0,  0.15" anchor="origin" color="purple" />
+            <led offset=" 0.0,-0.1,0.15" anchor="origin" color="purple" />
+            <led offset="-0.1, 0,  0.15" anchor="origin" color="purple" />
+            <led offset=" 0.071, 0.071,0.15" anchor="origin" color="purple" />
+            <led offset="-0.071, 0.071,0.15" anchor="origin" color="purple" />
+            <led offset=" 0.071,-0.071,0.15" anchor="origin" color="purple" />
+            <led offset="-0.071,-0.071,0.15" anchor="origin" color="purple" />
           </leds>
         </cylinder>
       </entity>

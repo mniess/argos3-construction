@@ -113,9 +113,6 @@ CFootBotForaging::CFootBotForaging() :
 
 void CFootBotForaging::Init(TConfigurationNode& t_node) {
    try {
-      /*
-       * Initialize sensors/actuators
-       */
       m_pcWheels    = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
       m_pcLEDs      = GetActuator<CCI_LEDsActuator                >("leds"                 );
       m_pcRABA      = GetActuator<CCI_RangeAndBearingActuator     >("range_and_bearing"    );
@@ -348,14 +345,25 @@ void CFootBotForaging::Explore() {
    else {
       /* perform the actual exploration */
       UpdateState();
-       CVector2 cMove = getNearestBlobVector();
-
+       CVector2 cMove = NearestLed(CColor().PURPLE);
        //If no blobs detected, go straight
        if(cMove.Length() == 0) {
            //cMove = DiffusionVector(bCollision);
            cMove = CVector2::X;
        }
-       //cMove += DiffusionVector(bCollision)*0.50; cMove.Normalize();
+
+       //If front sensor is small go straight and grip,else do diffusion
+      Real frontDist = (m_pcProximity->GetReadings().front().Value +
+                       m_pcProximity->GetReadings().back().Value) / 2;
+       if(frontDist != 0 && frontDist > 0.9){
+          m_pcGripper->LockPositive();
+          cMove = CVector2::X;
+          m_pcLEDs->SetAllColors(CColor::BLUE);
+          m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
+       }
+
+
+       //bool bCollision; cMove += DiffusionVector(bCollision)*0.50; cMove.Normalize();
       if(m_sStateData.InNest) { //Diffustion+Antiphototaxis
          SetWheelSpeedsFromVector(
             m_sWheelTurningParams.MaxSpeed * cMove -
@@ -367,21 +375,24 @@ void CFootBotForaging::Explore() {
    }
 }
 
-CVector2 CFootBotForaging::getNearestBlobVector() const {
+CVector2 CFootBotForaging::NearestLed(CColor color) const {
     CVector2 cMove;
     const CCI_ColoredBlobPerspectiveCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
     if(camReadings.BlobList.empty()) {
         return cMove;
     }
     for (auto& blob : camReadings.BlobList) {
-       CVector2 blobV(blob->X,blob->Y);
-       if(blobV.Length() < cMove.Length() || cMove.Length() == 0){
-           cMove = blobV;
-       }
+        if(blob->Color == color){
+            CVector2 blobV(blob->X,blob->Y);
+            if(blobV.Length() < cMove.Length() || cMove.Length() == 0){
+                cMove = blobV;
+            }
+        }
     }
-
-    // rotate by ~40deg , cause frontsensor is not front.
-    cMove.Rotate(CRadians(-0.7));
+    if(cMove.Length() >0)
+    LOG << cMove.Length() << " " <<  cMove.Angle()<<std::endl;
+    // rotate , cause frontsensor is not in front.
+    cMove.Rotate(ToRadians(CDegrees(-45)));
     cMove.Normalize();
     return cMove;
 }
@@ -402,9 +413,8 @@ void CFootBotForaging::ReturnToNest() {
          m_pcRABA->SetData(0, m_eLastExplorationResult);
          /* ... and switch to state 'resting' */
          m_pcLEDs->SetAllColors(CColor::RED);
+         m_pcGripper->Unlock();
          m_sStateData.State = SStateData::STATE_RESTING;
-         m_sStateData.TimeSearchingForPlaceInNest = 0;
-         m_eLastExplorationResult = LAST_EXPLORATION_NONE;
          return;
       }
       else {
