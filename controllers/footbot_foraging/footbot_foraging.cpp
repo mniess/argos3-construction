@@ -121,7 +121,7 @@ void CFootBotForaging::Init(TConfigurationNode& t_node) {
       m_pcProximity = GetSensor  <CCI_FootBotProximitySensor      >("footbot_proximity"    );
       m_pcLight     = GetSensor  <CCI_FootBotLightSensor          >("footbot_light"        );
       m_pcGround    = GetSensor  <CCI_FootBotMotorGroundSensor    >("footbot_motor_ground" );
-       m_pcCamera = GetSensor <CCI_ColoredBlobPerspectiveCameraSensor>("colored_blob_perspective_camera");
+       m_pcCamera = GetSensor <CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
       /*
        * Parse XML parameters
        */
@@ -349,41 +349,39 @@ void CFootBotForaging::Explore() {
        //If no blobs detected, go straight
        if(cMove.Length() == 0) {
            //cMove = DiffusionVector(bCollision);
-           cMove = CVector2::X;
+           cMove = CVector2::X * 11;
        }
 
-       //If front sensor is small go straight and grip,else do diffusion
-      Real frontDist = (m_pcProximity->GetReadings().front().Value +
-                       m_pcProximity->GetReadings().back().Value) / 2;
-       if(frontDist != 0 && frontDist > 0.9){
-          m_pcGripper->LockPositive();
-          cMove = CVector2::X;
-          m_pcLEDs->SetAllColors(CColor::BLUE);
-          m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
-       }
+       if(cMove.Length() < 10 ){
+          if(cMove.Angle()< ToRadians(CDegrees(10)) || cMove.Angle()> ToRadians(CDegrees(-10))) {
+              m_pcGripper->LockPositive();
+              m_pcLEDs->SetAllColors(CColor::BLUE);
+              m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
+          }
 
+       }
 
        //bool bCollision; cMove += DiffusionVector(bCollision)*0.50; cMove.Normalize();
       if(m_sStateData.InNest) { //Diffustion+Antiphototaxis
          SetWheelSpeedsFromVector(
-            m_sWheelTurningParams.MaxSpeed * cMove -
+            m_sWheelTurningParams.MaxSpeed * cMove.Normalize() -
             m_sWheelTurningParams.MaxSpeed * 0.25f * CalculateVectorToLight());
       }
       else {
-         SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove);
+         SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
       }
    }
 }
 
 CVector2 CFootBotForaging::NearestLed(CColor color) const {
     CVector2 cMove;
-    const CCI_ColoredBlobPerspectiveCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
+    const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
     if(camReadings.BlobList.empty()) {
         return cMove;
     }
     for (auto& blob : camReadings.BlobList) {
         if(blob->Color == color){
-            CVector2 blobV(blob->X,blob->Y);
+            CVector2 blobV(blob->Distance,blob->Angle);
             if(blobV.Length() < cMove.Length() || cMove.Length() == 0){
                 cMove = blobV;
             }
@@ -391,9 +389,7 @@ CVector2 CFootBotForaging::NearestLed(CColor color) const {
     }
     if(cMove.Length() >0)
     LOG << cMove.Length() << " " <<  cMove.Angle()<<std::endl;
-    // rotate , cause frontsensor is not in front.
-    cMove.Rotate(ToRadians(CDegrees(-45)));
-    cMove.Normalize();
+
     return cMove;
 }
 

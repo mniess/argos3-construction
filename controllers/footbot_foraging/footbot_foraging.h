@@ -32,7 +32,7 @@
 /* Definition of the foot-bot motor ground sensor */
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_motor_ground_sensor.h>
 
-#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_perspective_camera_sensor.h>
+#include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
 /* Definitions for random number generation */
 #include <argos3/core/utility/math/rng.h>
 
@@ -308,7 +308,7 @@ private:
    /* Pointer to the foot-bot motor ground sensor */
    CCI_FootBotMotorGroundSensor* m_pcGround;
 
-   CCI_ColoredBlobPerspectiveCameraSensor* m_pcCamera;
+   CCI_ColoredBlobOmnidirectionalCameraSensor* m_pcCamera;
    /* The random number generator */
    CRandom::CRNG* m_pcRNG;
 
