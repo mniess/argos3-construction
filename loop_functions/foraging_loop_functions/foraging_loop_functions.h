@@ -23,19 +23,6 @@ public:
 
 private:
 
-   Real m_fFoodSquareRadius;
-   CRange<Real> m_cForagingArenaSideX, m_cForagingArenaSideY;
-   std::vector<CVector2> m_cFoodPos;
-   CFloorEntity* m_pcFloor;
-   CRandom::CRNG* m_pcRNG;
-
-   std::string m_strOutput;
-   std::ofstream m_cOutput;
-
-   UInt32 m_unCollectedFood;
-   SInt64 m_nEnergy;
-   UInt32 m_unEnergyPerFoodItem;
-   UInt32 m_unEnergyPerWalkingRobot;
 };
 
 #endif

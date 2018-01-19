@@ -3,20 +3,6 @@
 /****************************************/
 /****************************************/
 
-CFootBotForaging::SFoodData::SFoodData() :
-   HasFoodItem(false),
-   FoodItemIdx(0),
-   TotalFoodItems(0) {}
-
-void CFootBotForaging::SFoodData::Reset() {
-   HasFoodItem = false;
-   FoodItemIdx = 0;
-   TotalFoodItems = 0;
-}
-
-/****************************************/
-/****************************************/
-
 CFootBotForaging::SDiffusionParams::SDiffusionParams() :
    GoStraightAngleRange(CRadians(-1.0f), CRadians(1.0f)) {}
 
@@ -53,45 +39,19 @@ void CFootBotForaging::SWheelTurningParams::Init(TConfigurationNode& t_node) {
    }
 }
 
-/****************************************/
-/****************************************/
+CFootBotForaging::SStateData::SStateData() {}
 
-CFootBotForaging::SStateData::SStateData() :
-   ProbRange(0.0f, 1.0f) {}
 
 void CFootBotForaging::SStateData::Init(TConfigurationNode& t_node) {
-   try {
-      GetNodeAttribute(t_node, "initial_rest_to_explore_prob", InitialRestToExploreProb);
-      GetNodeAttribute(t_node, "initial_explore_to_rest_prob", InitialExploreToRestProb);
-      GetNodeAttribute(t_node, "food_rule_explore_to_rest_delta_prob", FoodRuleExploreToRestDeltaProb);
-      GetNodeAttribute(t_node, "food_rule_rest_to_explore_delta_prob", FoodRuleRestToExploreDeltaProb);
-      GetNodeAttribute(t_node, "collision_rule_explore_to_rest_delta_prob", CollisionRuleExploreToRestDeltaProb);
-      GetNodeAttribute(t_node, "social_rule_rest_to_explore_delta_prob", SocialRuleRestToExploreDeltaProb);
-      GetNodeAttribute(t_node, "social_rule_explore_to_rest_delta_prob", SocialRuleExploreToRestDeltaProb);
-      GetNodeAttribute(t_node, "minimum_resting_time", MinimumRestingTime);
-      GetNodeAttribute(t_node, "minimum_unsuccessful_explore_time", MinimumUnsuccessfulExploreTime);
-      GetNodeAttribute(t_node, "minimum_search_for_place_in_nest_time", MinimumSearchForPlaceInNestTime);
-
-   }
-   catch(CARGoSException& ex) {
-      THROW_ARGOSEXCEPTION_NESTED("Error initializing controller state parameters.", ex);
-   }
+    HasItem = false;
+    State = STATE_EXPLORING;
 }
 
 void CFootBotForaging::SStateData::Reset() {
-   State = STATE_RESTING;
-   InNest = true;
-   RestToExploreProb = InitialRestToExploreProb;
-   ExploreToRestProb = InitialExploreToRestProb;
-   TimeExploringUnsuccessfully = 0;
-   /* Initially the robot is resting, and by setting RestingTime to
-      MinimumRestingTime we force the robots to make a decision at the
-      experiment start. If instead we set RestingTime to zero, we would
-      have to wait till RestingTime reaches MinimumRestingTime before
-      something happens, which is just a waste of time. */
-   TimeRested = MinimumRestingTime;
-   TimeSearchingForPlaceInNest = 0;
+    HasItem = false;
+    State = STATE_EXPLORING;
 }
+
 
 /****************************************/
 /****************************************/
@@ -99,12 +59,9 @@ void CFootBotForaging::SStateData::Reset() {
 CFootBotForaging::CFootBotForaging() :
    m_pcWheels(nullptr),
    m_pcLEDs(nullptr),
-   m_pcRABA(nullptr),
    m_pcGripper(nullptr),
-   m_pcRABS(nullptr),
    m_pcProximity(nullptr),
    m_pcLight(nullptr),
-   m_pcGround(nullptr),
    m_pcCamera(nullptr),
    m_pcRNG(nullptr) {}
 
@@ -115,13 +72,10 @@ void CFootBotForaging::Init(TConfigurationNode& t_node) {
    try {
       m_pcWheels    = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
       m_pcLEDs      = GetActuator<CCI_LEDsActuator                >("leds"                 );
-      m_pcRABA      = GetActuator<CCI_RangeAndBearingActuator     >("range_and_bearing"    );
       m_pcGripper   = GetActuator<CCI_FootBotGripperActuator      >("footbot_gripper"      );
-      m_pcRABS      = GetSensor  <CCI_RangeAndBearingSensor       >("range_and_bearing"    );
       m_pcProximity = GetSensor  <CCI_FootBotProximitySensor      >("footbot_proximity"    );
       m_pcLight     = GetSensor  <CCI_FootBotLightSensor          >("footbot_light"        );
-      m_pcGround    = GetSensor  <CCI_FootBotMotorGroundSensor    >("footbot_motor_ground" );
-       m_pcCamera = GetSensor <CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
+      m_pcCamera = GetSensor <CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
       /*
        * Parse XML parameters
        */
@@ -129,8 +83,6 @@ void CFootBotForaging::Init(TConfigurationNode& t_node) {
       m_sDiffusionParams.Init(GetNode(t_node, "diffusion"));
       /* Wheel turning */
       m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
-      /* Controller state */
-      m_sStateData.Init(GetNode(t_node, "state"));
    }
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error initializing the foot-bot foraging controller for robot \"" << GetId() << "\"", ex);
@@ -173,42 +125,15 @@ void CFootBotForaging::ControlStep() {
 void CFootBotForaging::Reset() {
    /* Reset robot state */
    m_sStateData.Reset();
-   /* Reset food data */
-   m_sFoodData.Reset();
    /* Set LED color */
-   m_pcLEDs->SetAllColors(CColor::RED);
-   /* Clear up the last exploration result */
-   m_eLastExplorationResult = LAST_EXPLORATION_NONE;
-   m_pcRABA->ClearData();
-   m_pcRABA->SetData(0, LAST_EXPLORATION_NONE);
+   m_pcLEDs->SetAllColors(CColor::GREEN);
 }
 
 /****************************************/
 /****************************************/
 
 void CFootBotForaging::UpdateState() {
-   /* Reset state flags */
-   m_sStateData.InNest = false;
-   /* Read stuff from the ground sensor */
-   const CCI_FootBotMotorGroundSensor::TReadings& tGroundReads = m_pcGround->GetReadings();
-   /*
-    * You can say whether you are in the nest by checking the ground sensor
-    * placed close to the wheel motors. It returns a value between 0 and 1.
-    * It is 1 when the robot is on a white area, it is 0 when the robot
-    * is on a black area and it is around 0.5 when the robot is on a gray
-    * area. 
-    * The foot-bot has 4 sensors like this, two in the front
-    * (corresponding to readings 0 and 1) and two in the back
-    * (corresponding to reading 2 and 3).  Here we want the back sensors
-    * (readings 2 and 3) to tell us whether we are on gray: if so, the
-    * robot is completely in the nest, otherwise it's outside.
-    */
-   if(tGroundReads[2].Value > 0.25f &&
-      tGroundReads[2].Value < 0.75f &&
-      tGroundReads[3].Value > 0.25f &&
-      tGroundReads[3].Value < 0.75f) {
-      m_sStateData.InNest = true;
-   }
+
 }
 
 /****************************************/
@@ -225,9 +150,6 @@ CVector2 CFootBotForaging::CalculateVectorToLight() {
    /* If the light was perceived, return the vector */
     return cAccumulator.Length() > 0.0f ? CVector2(1.0f, cAccumulator.Angle()) : CVector2();
 }
-
-/****************************************/
-/****************************************/
 
 CVector2 CFootBotForaging::DiffusionVector(bool& b_collision) {
    /* Get readings from proximity sensor */
@@ -337,91 +259,57 @@ void CFootBotForaging::Rest() {
 void CFootBotForaging::Explore() {
    m_pcCamera->Enable();;
 
-   if(m_sFoodData.HasFoodItem) {
+   if(m_sStateData.HasItem) {
       m_pcLEDs->SetAllColors(CColor::BLUE);
       m_pcCamera->Disable();
       m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
    }
    else {
-      /* perform the actual exploration */
-      UpdateState();
        CVector2 cMove = NearestLed(CColor().PURPLE);
-       //If no blobs detected, go straight
+       //If no blobs detected, go straight TODO
        if(cMove.Length() == 0) {
            //cMove = DiffusionVector(bCollision);
            cMove = CVector2::X * 11;
        }
-
+        // Cylinder is within reach, grip it!
        if(cMove.Length() < 10 ){
           if(cMove.Angle()< ToRadians(CDegrees(10)) || cMove.Angle()> ToRadians(CDegrees(-10))) {
               m_pcGripper->LockPositive();
               m_pcLEDs->SetAllColors(CColor::BLUE);
               m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
+          } else {
+              //TODO rotate to cylinder
           }
 
        }
 
        //bool bCollision; cMove += DiffusionVector(bCollision)*0.50; cMove.Normalize();
-      if(m_sStateData.InNest) { //Diffustion+Antiphototaxis
-         SetWheelSpeedsFromVector(
-            m_sWheelTurningParams.MaxSpeed * cMove.Normalize() -
-            m_sWheelTurningParams.MaxSpeed * 0.25f * CalculateVectorToLight());
-      }
-      else {
-         SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
-      }
+       SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
    }
 }
 
 CVector2 CFootBotForaging::NearestLed(CColor color) const {
-    CVector2 cMove;
+    CVector2 ledV;
     const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
     if(camReadings.BlobList.empty()) {
-        return cMove;
+        return ledV;
     }
     for (auto& blob : camReadings.BlobList) {
         if(blob->Color == color){
             CVector2 blobV(blob->Distance,blob->Angle);
-            if(blobV.Length() < cMove.Length() || cMove.Length() == 0){
-                cMove = blobV;
+            if(blobV.Length() < ledV.Length() || ledV.Length() == 0){
+                ledV = blobV;
             }
         }
     }
-    if(cMove.Length() >0)
-    LOG << cMove.Length() << " " <<  cMove.Angle()<<std::endl;
 
-    return cMove;
+    return ledV;
 }
 
 /****************************************/
 /****************************************/
 
 void CFootBotForaging::ReturnToNest() {
-   /* As soon as you get to the nest, switch to 'resting' */
-   UpdateState();
-   /* Are we in the nest? */
-   if(m_sStateData.InNest) {
-      /* Have we looked for a place long enough? */
-      if(m_sStateData.TimeSearchingForPlaceInNest > m_sStateData.MinimumSearchForPlaceInNestTime) {
-         /* Yes, stop the wheels... */
-         m_pcWheels->SetLinearVelocity(0.0f, 0.0f);
-         /* Tell people about the last exploration attempt */
-         m_pcRABA->SetData(0, m_eLastExplorationResult);
-         /* ... and switch to state 'resting' */
-         m_pcLEDs->SetAllColors(CColor::RED);
-         m_pcGripper->Unlock();
-         m_sStateData.State = SStateData::STATE_RESTING;
-         return;
-      }
-      else {
-         /* No, keep looking */
-         ++m_sStateData.TimeSearchingForPlaceInNest;
-      }
-   }
-   else {
-      /* Still outside the nest */
-      m_sStateData.TimeSearchingForPlaceInNest = 0;
-   }
    /* Keep going */
    bool bCollision;
    SetWheelSpeedsFromVector(
