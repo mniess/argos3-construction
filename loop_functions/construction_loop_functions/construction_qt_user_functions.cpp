@@ -1,5 +1,5 @@
-#include "foraging_qt_user_functions.h"
-#include <controllers/footbot_foraging/footbot_foraging.h>
+#include "construction_qt_user_functions.h"
+#include <controllers/footbot_construction/footbot_construction.h>
 
 using namespace argos;
 
@@ -14,7 +14,7 @@ CForagingQTUserFunctions::CForagingQTUserFunctions() {
 /****************************************/
 
 void CForagingQTUserFunctions::Draw(CFootBotEntity& c_entity) {
-    auto& cController = dynamic_cast<CFootBotForaging&>(c_entity.GetControllableEntity().GetController());
+    auto& cController = dynamic_cast<CFootBotConstruction&>(c_entity.GetControllableEntity().GetController());
    DrawText(CVector3(0.0, 0.0, 0.3),   // position
             c_entity.GetId());
 }
@@ -22,4 +22,4 @@ void CForagingQTUserFunctions::Draw(CFootBotEntity& c_entity) {
 /****************************************/
 /****************************************/
 
-REGISTER_QTOPENGL_USER_FUNCTIONS(CForagingQTUserFunctions, "foraging_qt_user_functions")
+REGISTER_QTOPENGL_USER_FUNCTIONS(CForagingQTUserFunctions, "construction_qt_user_functions")

@@ -1,12 +1,12 @@
-#include "footbot_foraging.h"
+#include "footbot_construction.h"
 
 /****************************************/
 /****************************************/
 
-CFootBotForaging::SDiffusionParams::SDiffusionParams() :
+CFootBotConstruction::SDiffusionParams::SDiffusionParams() :
    GoStraightAngleRange(CRadians(-1.0f), CRadians(1.0f)) {}
 
-void CFootBotForaging::SDiffusionParams::Init(TConfigurationNode& t_node) {
+void CFootBotConstruction::SDiffusionParams::Init(TConfigurationNode& t_node) {
    try {
       CRange<CDegrees> cGoStraightAngleRangeDegrees(CDegrees(-10.0f), CDegrees(10.0f));
       GetNodeAttribute(t_node, "go_straight_angle_range", cGoStraightAngleRangeDegrees);
@@ -22,7 +22,7 @@ void CFootBotForaging::SDiffusionParams::Init(TConfigurationNode& t_node) {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::SWheelTurningParams::Init(TConfigurationNode& t_node) {
+void CFootBotConstruction::SWheelTurningParams::Init(TConfigurationNode& t_node) {
    try {
       TurningMechanism = NO_TURN;
       CDegrees cAngle;
@@ -39,15 +39,15 @@ void CFootBotForaging::SWheelTurningParams::Init(TConfigurationNode& t_node) {
    }
 }
 
-CFootBotForaging::SStateData::SStateData() {}
+CFootBotConstruction::SStateData::SStateData() {}
 
 
-void CFootBotForaging::SStateData::Init(TConfigurationNode& t_node) {
+void CFootBotConstruction::SStateData::Init(TConfigurationNode& t_node) {
     HasItem = false;
     State = STATE_EXPLORING;
 }
 
-void CFootBotForaging::SStateData::Reset() {
+void CFootBotConstruction::SStateData::Reset() {
     HasItem = false;
     State = STATE_EXPLORING;
 }
@@ -56,7 +56,7 @@ void CFootBotForaging::SStateData::Reset() {
 /****************************************/
 /****************************************/
 
-CFootBotForaging::CFootBotForaging() :
+CFootBotConstruction::CFootBotConstruction() :
    m_pcWheels(nullptr),
    m_pcLEDs(nullptr),
    m_pcGripper(nullptr),
@@ -68,7 +68,7 @@ CFootBotForaging::CFootBotForaging() :
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::Init(TConfigurationNode& t_node) {
+void CFootBotConstruction::Init(TConfigurationNode& t_node) {
    try {
       m_pcWheels    = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
       m_pcLEDs      = GetActuator<CCI_LEDsActuator                >("leds"                 );
@@ -85,7 +85,7 @@ void CFootBotForaging::Init(TConfigurationNode& t_node) {
       m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
    }
    catch(CARGoSException& ex) {
-      THROW_ARGOSEXCEPTION_NESTED("Error initializing the foot-bot foraging controller for robot \"" << GetId() << "\"", ex);
+      THROW_ARGOSEXCEPTION_NESTED("Error initializing the foot-bot construction controller for robot \"" << GetId() << "\"", ex);
    }
    /*
     * Initialize other stuff
@@ -99,7 +99,7 @@ void CFootBotForaging::Init(TConfigurationNode& t_node) {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::ControlStep() {
+void CFootBotConstruction::ControlStep() {
    switch(m_sStateData.State) {
       case SStateData::STATE_RESTING: {
          Rest();
@@ -122,7 +122,7 @@ void CFootBotForaging::ControlStep() {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::Reset() {
+void CFootBotConstruction::Reset() {
    /* Reset robot state */
    m_sStateData.Reset();
    /* Set LED color */
@@ -132,14 +132,14 @@ void CFootBotForaging::Reset() {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::UpdateState() {
+void CFootBotConstruction::UpdateState() {
 
 }
 
 /****************************************/
 /****************************************/
 
-CVector2 CFootBotForaging::CalculateVectorToLight() {
+CVector2 CFootBotConstruction::CalculateVectorToLight() {
    /* Get readings from light sensor */
    const CCI_FootBotLightSensor::TReadings& tLightReads = m_pcLight->GetReadings();
    /* Sum them together */
@@ -151,7 +151,7 @@ CVector2 CFootBotForaging::CalculateVectorToLight() {
     return cAccumulator.Length() > 0.0f ? CVector2(1.0f, cAccumulator.Angle()) : CVector2();
 }
 
-CVector2 CFootBotForaging::DiffusionVector(bool& b_collision) {
+CVector2 CFootBotConstruction::DiffusionVector(bool& b_collision) {
    /* Get readings from proximity sensor */
    const CCI_FootBotProximitySensor::TReadings& tProxReads = m_pcProximity->GetReadings();
    /* Sum them together */
@@ -177,7 +177,7 @@ CVector2 CFootBotForaging::DiffusionVector(bool& b_collision) {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::SetWheelSpeedsFromVector(const CVector2& c_heading) {
+void CFootBotConstruction::SetWheelSpeedsFromVector(const CVector2& c_heading) {
    /* Get the heading angle */
    CRadians cHeadingAngle = c_heading.Angle().SignedNormalize();
    /* Get the length of the heading vector */
@@ -248,7 +248,7 @@ void CFootBotForaging::SetWheelSpeedsFromVector(const CVector2& c_heading) {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::Rest() {
+void CFootBotConstruction::Rest() {
       m_pcLEDs->SetAllColors(CColor::GREEN);
       m_sStateData.State = SStateData::STATE_EXPLORING;
 }
@@ -256,7 +256,7 @@ void CFootBotForaging::Rest() {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::Explore() {
+void CFootBotConstruction::Explore() {
    m_pcCamera->Enable();;
 
    if(m_sStateData.HasItem) {
@@ -288,7 +288,7 @@ void CFootBotForaging::Explore() {
    }
 }
 
-CVector2 CFootBotForaging::NearestLed(CColor color) const {
+CVector2 CFootBotConstruction::NearestLed(CColor color) const {
     CVector2 ledV;
     const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
     if(camReadings.BlobList.empty()) {
@@ -309,7 +309,7 @@ CVector2 CFootBotForaging::NearestLed(CColor color) const {
 /****************************************/
 /****************************************/
 
-void CFootBotForaging::ReturnToNest() {
+void CFootBotConstruction::ReturnToNest() {
    /* Keep going */
    bool bCollision;
    SetWheelSpeedsFromVector(
@@ -330,4 +330,4 @@ void CFootBotForaging::ReturnToNest() {
  * class to instantiate.
  * See also the XML configuration files for an example of how this is used.
  */
-REGISTER_CONTROLLER(CFootBotForaging, "footbot_foraging_controller")
+REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")

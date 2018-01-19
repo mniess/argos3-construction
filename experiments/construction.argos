@@ -8,15 +8,15 @@
     <system threads="0" />
     <experiment length="0"
                 ticks_per_second="10"
-                random_seed="1233" />
+                random_seed="123" />
   </framework>
 
   <!-- *************** -->
   <!-- * Controllers * -->
   <!-- *************** -->
   <controllers>
-    <footbot_foraging_controller id="ffc"
-                                 library="build/controllers/footbot_foraging/libfootbot_foraging">
+    <footbot_construction_controller id="ffc"
+                                 library="build/controllers/footbot_construction/libfootbot_construction">
       <actuators>
         <differential_steering implementation="default" />
         <leds implementation="default" medium="leds" />
@@ -37,14 +37,14 @@
                        no_turn_angle_threshold="10"
                        max_speed="10" />
       </params>
-    </footbot_foraging_controller>
+    </footbot_construction_controller>
   </controllers>
 
   <!-- ****************** -->
   <!-- * Loop functions * -->
   <!-- ****************** -->
-  <loop_functions library="build/loop_functions/foraging_loop_functions/libforaging_loop_functions"
-                  label="foraging_loop_functions">
+  <loop_functions library="build/loop_functions/construction_loop_functions/libconstruction_loop_functions"
+                  label="construction_loop_functions">
   </loop_functions>
 
   <!-- *********************** -->
@@ -150,7 +150,7 @@
                    look_at="0,0,0"
                    lens_focal_length="20" />
         </camera>
-      <user_functions label="foraging_qt_user_functions" />
+      <user_functions label="construction_qt_user_functions" />
     </qt-opengl>
   </visualization>
 

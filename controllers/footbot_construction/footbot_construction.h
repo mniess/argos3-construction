@@ -1,14 +1,11 @@
 /*
- * AUTHOR: Carlo Pinciroli <cpinciro@ulb.ac.be>
- *
- * An example foraging controller for the foot-bot.
  *
  * This controller is meant to be used with the XML file:
- *    experiments/foraging.argos
+ *    experiments/construction.argos
  */
 
-#ifndef FOOTBOT_FORAGING_H
-#define FOOTBOT_FORAGING_H
+#ifndef FOOTBOT_CONSTRUCTION_H
+#define FOOTBOT_CONSTRUCTION_H
 
 /*
  * Include some necessary headers.
@@ -21,7 +18,6 @@
 #include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
 /* Definition of the range and bearing actuator */
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_actuator.h>
-
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_gripper_actuator.h>
 /* Definition of the range and bearing sensor */
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
@@ -47,14 +43,14 @@ using namespace argos;
 /*
  * A controller is simply an implementation of the CCI_Controller class.
  */
-class CFootBotForaging : public CCI_Controller {
+class CFootBotConstruction : public CCI_Controller {
 
 public:
     /*
     * The following variables are used as parameters for the
     * diffusion algorithm. You can set their value in the <parameters>
     * section of the XML configuration file, under the
-    * <controllers><footbot_foraging_controller><parameters><diffusion>
+    * <controllers><footbot_construction_controller><parameters><diffusion>
     * section.
     */
    struct SDiffusionParams {
@@ -81,7 +77,7 @@ public:
     * turning during navigation. You can set their value
     * in the <parameters> section of the XML configuration
     * file, under the
-    * <controllers><footbot_foraging_controller><parameters><wheel_turning>
+    * <controllers><footbot_construction_controller><parameters><wheel_turning>
     * section.
     */
    struct SWheelTurningParams {
@@ -128,14 +124,14 @@ public:
 public:
 
    /* Class constructor. */
-   CFootBotForaging();
+   CFootBotConstruction();
    /* Class destructor. */
-   virtual ~CFootBotForaging() {}
+   virtual ~CFootBotConstruction() {}
 
    /*
     * This function initializes the controller.
     * The 't_node' variable points to the <parameters> section in the XML
-    * file in the <controllers><footbot_foraging_controller> section.
+    * file in the <controllers><footbot_construction_controller> section.
     */
    virtual void Init(TConfigurationNode& t_node);
 

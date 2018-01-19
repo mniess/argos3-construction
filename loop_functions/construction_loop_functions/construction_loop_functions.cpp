@@ -1,4 +1,4 @@
-#include "foraging_loop_functions.h"
+#include "construction_loop_functions.h"
 
 /****************************************/
 /****************************************/
@@ -42,4 +42,4 @@ void CForagingLoopFunctions::PreStep() {
 /****************************************/
 /****************************************/
 
-REGISTER_LOOP_FUNCTIONS(CForagingLoopFunctions, "foraging_loop_functions")
+REGISTER_LOOP_FUNCTIONS(CForagingLoopFunctions, "construction_loop_functions")
