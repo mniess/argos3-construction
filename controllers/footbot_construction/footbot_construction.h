@@ -10,29 +10,18 @@
 /*
  * Include some necessary headers.
  */
-/* Definition of the CCI_Controller class. */
 #include <argos3/core/control_interface/ci_controller.h>
-/* Definition of the differential steering actuator */
+#include <argos3/core/utility/math/rng.h>
+#include <argos3/core/utility/configuration/argos_configuration.h>
 #include <argos3/plugins/robots/generic/control_interface/ci_differential_steering_actuator.h>
-/* Definition of the LEDs actuator */
 #include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
-/* Definition of the range and bearing actuator */
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_actuator.h>
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_gripper_actuator.h>
-/* Definition of the range and bearing sensor */
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
-/* Definition of the foot-bot proximity sensor */
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_proximity_sensor.h>
-/* Definition of the foot-bot light sensor */
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_light_sensor.h>
-/* Definition of the foot-bot motor ground sensor */
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_motor_ground_sensor.h>
-
 #include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
-/* Definitions for random number generation */
-#include <argos3/core/utility/math/rng.h>
-
-#include <argos3/core/utility/configuration/argos_configuration.h>
 
 /*
  * All the ARGoS stuff in the 'argos' namespace.
@@ -114,8 +103,6 @@ public:
          STATE_RETURN_TO_NEST
       } State;
 
-       bool HasItem;
-
       SStateData();
       void Init(TConfigurationNode& t_node);
       void Reset();
@@ -191,7 +178,7 @@ private:
     * Calculates the vector to the light. Used to perform
     * phototaxis and antiphototaxis.
     */
-   CVector2 CalculateVectorToLight();
+   CVector2 LightVector();
 
    /*
     * Calculates the diffusion vector. If there is a close obstacle,
@@ -206,12 +193,12 @@ private:
      * Get a vector, that points to the closest led in specific color
      * perceived by the omnicam.
      */
-    CVector2 NearestLed(CColor color) const;
+    CVector2 LedVector(CColor color) const;
    /*
     * Gets a direction vector as input and transforms it into wheel
     * actuation.
     */
-   void SetWheelSpeedsFromVector(const CVector2& c_heading);
+   void SetWheelSpeeds(const CVector2 &c_heading);
 
    /*
     * Executes the resting state.
@@ -251,6 +238,19 @@ private:
    SWheelTurningParams m_sWheelTurningParams;
    /* The diffusion parameters */
    SDiffusionParams m_sDiffusionParams;
+
+    bool GripperLocked = false;
+
+    CVector2 RandomVector(int minDeg, int maxDeg);
+
+    bool HasItem();
+
+    void SetState(SStateData::EState newState);
+
+    void grip(bool lock) {
+        GripperLocked = lock;
+        lock ? m_pcGripper->LockPositive() : m_pcGripper->Unlock();
+    }
 };
 
 #endif

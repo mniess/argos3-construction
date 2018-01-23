@@ -19,9 +19,6 @@ void CFootBotConstruction::SDiffusionParams::Init(TConfigurationNode& t_node) {
    }
 }
 
-/****************************************/
-/****************************************/
-
 void CFootBotConstruction::SWheelTurningParams::Init(TConfigurationNode& t_node) {
    try {
       TurningMechanism = NO_TURN;
@@ -43,15 +40,12 @@ CFootBotConstruction::SStateData::SStateData() {}
 
 
 void CFootBotConstruction::SStateData::Init(TConfigurationNode& t_node) {
-    HasItem = false;
-    State = STATE_EXPLORING;
+    Reset();
 }
 
 void CFootBotConstruction::SStateData::Reset() {
-    HasItem = false;
     State = STATE_EXPLORING;
 }
-
 
 /****************************************/
 /****************************************/
@@ -65,7 +59,6 @@ CFootBotConstruction::CFootBotConstruction() :
    m_pcCamera(nullptr),
    m_pcRNG(nullptr) {}
 
-/****************************************/
 /****************************************/
 
 void CFootBotConstruction::Init(TConfigurationNode& t_node) {
@@ -95,11 +88,10 @@ void CFootBotConstruction::Init(TConfigurationNode& t_node) {
    m_pcRNG = CRandom::CreateRNG("argos");
    Reset();
 }
-
-/****************************************/
 /****************************************/
 
 void CFootBotConstruction::ControlStep() {
+   UpdateState();
    switch(m_sStateData.State) {
       case SStateData::STATE_RESTING: {
          Rest();
@@ -120,7 +112,6 @@ void CFootBotConstruction::ControlStep() {
 }
 
 /****************************************/
-/****************************************/
 
 void CFootBotConstruction::Reset() {
    /* Reset robot state */
@@ -133,13 +124,18 @@ void CFootBotConstruction::Reset() {
 /****************************************/
 
 void CFootBotConstruction::UpdateState() {
-
+    //TODO remove necessity for this hack, bots sometimes don't grip correct.
+   if(m_sStateData.State == SStateData::STATE_RETURN_TO_NEST &&
+           !HasItem()) {
+      m_sStateData.State = SStateData::STATE_EXPLORING;
+       m_pcGripper->Unlock();
+   }
 }
 
 /****************************************/
 /****************************************/
 
-CVector2 CFootBotConstruction::CalculateVectorToLight() {
+CVector2 CFootBotConstruction::LightVector() {
    /* Get readings from light sensor */
    const CCI_FootBotLightSensor::TReadings& tLightReads = m_pcLight->GetReadings();
    /* Sum them together */
@@ -150,6 +146,8 @@ CVector2 CFootBotConstruction::CalculateVectorToLight() {
    /* If the light was perceived, return the vector */
     return cAccumulator.Length() > 0.0f ? CVector2(1.0f, cAccumulator.Angle()) : CVector2();
 }
+
+/****************************************/
 
 CVector2 CFootBotConstruction::DiffusionVector(bool& b_collision) {
    /* Get readings from proximity sensor */
@@ -175,9 +173,38 @@ CVector2 CFootBotConstruction::DiffusionVector(bool& b_collision) {
 }
 
 /****************************************/
+
+CVector2 CFootBotConstruction::LedVector(CColor color) const {
+   CVector2 ledV;
+   const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
+   if(camReadings.BlobList.empty()) {
+      return ledV;
+   }
+   for (auto& blob : camReadings.BlobList) {
+      if(blob->Color == color){
+         CVector2 blobV(blob->Distance,blob->Angle);
+         if(blobV.Length() < ledV.Length() || ledV.Length() == 0){
+            ledV = blobV;
+         }
+      }
+   }
+
+   return ledV;
+}
+
+CVector2 CFootBotConstruction::RandomVector(int minDeg = 0, int maxDeg = 360) {
+   const CRange<SInt32> range = CRange<SInt32>(minDeg,maxDeg);
+   int rndDeg = m_pcRNG->Uniform(range);
+   return CVector2(1,ToRadians(CDegrees(rndDeg)));
+}
+
 /****************************************/
 
-void CFootBotConstruction::SetWheelSpeedsFromVector(const CVector2& c_heading) {
+bool CFootBotConstruction::HasItem() {
+    return(GripperLocked && LedVector(CColor::PURPLE).Length()<12);
+}
+
+void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
    /* Get the heading angle */
    CRadians cHeadingAngle = c_heading.Angle().SignedNormalize();
    /* Get the length of the heading vector */
@@ -254,80 +281,64 @@ void CFootBotConstruction::Rest() {
 }
 
 /****************************************/
-/****************************************/
 
 void CFootBotConstruction::Explore() {
-   m_pcCamera->Enable();;
-
-   if(m_sStateData.HasItem) {
-      m_pcLEDs->SetAllColors(CColor::BLUE);
-      m_pcCamera->Disable();
-      m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
+   m_pcCamera->Enable();
+   CVector2 cMove = CVector2::X;
+   CVector2 cCCyl = LedVector(CColor().PURPLE);
+   /*Cylinder seen, move towards it*/
+   if(cCCyl.Length() != 0) {
+      // Cylinder is within reach, grip it!
+      if (cCCyl.Length() < 10) {
+         if (cCCyl.Angle() < ToRadians(CDegrees(10)) || cCCyl.Angle() > ToRadians(CDegrees(-10))) {
+             grip(true);
+             SetState(SStateData::STATE_RETURN_TO_NEST);
+         } else {
+            //TODO rotate to cylinder
+         }
+      } else { //move towards cylinder
+          cMove = cCCyl;
+      }
+   } else { //wander
+      bool bCollision;
+      cMove = DiffusionVector(bCollision) + RandomVector();
    }
-   else {
-       CVector2 cMove = NearestLed(CColor().PURPLE);
-       //If no blobs detected, go straight TODO
-       if(cMove.Length() == 0) {
-           //cMove = DiffusionVector(bCollision);
-           cMove = CVector2::X * 11;
-       }
-        // Cylinder is within reach, grip it!
-       if(cMove.Length() < 10 ){
-          if(cMove.Angle()< ToRadians(CDegrees(10)) || cMove.Angle()> ToRadians(CDegrees(-10))) {
-              m_pcGripper->LockPositive();
-              m_pcLEDs->SetAllColors(CColor::BLUE);
-              m_sStateData.State = SStateData::STATE_RETURN_TO_NEST;
-          } else {
-              //TODO rotate to cylinder
-          }
 
-       }
-
-       //bool bCollision; cMove += DiffusionVector(bCollision)*0.50; cMove.Normalize();
-       SetWheelSpeedsFromVector(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
-   }
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
 }
 
-CVector2 CFootBotConstruction::NearestLed(CColor color) const {
-    CVector2 ledV;
-    const CCI_ColoredBlobOmnidirectionalCameraSensor::SReadings camReadings = m_pcCamera->GetReadings();
-    if(camReadings.BlobList.empty()) {
-        return ledV;
-    }
-    for (auto& blob : camReadings.BlobList) {
-        if(blob->Color == color){
-            CVector2 blobV(blob->Distance,blob->Angle);
-            if(blobV.Length() < ledV.Length() || ledV.Length() == 0){
-                ledV = blobV;
-            }
-        }
-    }
-
-    return ledV;
-}
-
-/****************************************/
 /****************************************/
 
 void CFootBotConstruction::ReturnToNest() {
-   /* Keep going */
    bool bCollision;
-   SetWheelSpeedsFromVector(
-      m_sWheelTurningParams.MaxSpeed * DiffusionVector(bCollision) +
-      m_sWheelTurningParams.MaxSpeed * CalculateVectorToLight());
+    CVector2 cMove = DiffusionVector(bCollision) + LightVector()*5 + RandomVector(-90,90);
+    SetWheelSpeeds(
+            m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+}
+
+void CFootBotConstruction::SetState(CFootBotConstruction::SStateData::EState newState) {
+    switch(newState){
+        case SStateData::STATE_RESTING: {
+            m_pcLEDs->SetAllColors(CColor::MAGENTA);
+            break;
+        }
+        case SStateData::STATE_EXPLORING: {
+            m_pcLEDs->SetAllColors(CColor::GREEN);
+            break;
+        }
+        case SStateData::STATE_RETURN_TO_NEST: {
+            m_pcLEDs->SetAllColors(CColor::BLUE);
+            break;
+        }
+        default: {
+            LOGERR << "We can't be here, there's a bug!" << std::endl;
+        }
+
+    }
+    m_sStateData.State = newState;
 }
 
 /****************************************/
 /****************************************/
 
-/*
- * This statement notifies ARGoS of the existence of the controller.
- * It binds the class passed as first argument to the string passed as
- * second argument.
- * The string is then usable in the XML configuration file to refer to
- * this controller.
- * When ARGoS reads that string in the XML file, it knows which controller
- * class to instantiate.
- * See also the XML configuration files for an example of how this is used.
- */
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")
