@@ -54,7 +54,7 @@
 
     <floor id="floor"
            source="loop_functions"
-           pixels_per_meter="50" />
+           pixels_per_meter="1" />
 
     <box id="wall_north" size="10,0.1,0.5" movable="false">
       <body position="0,5,0" orientation="0,0,0" />
@@ -70,7 +70,7 @@
     </box>
 
     <light id="light_1"
-           position="0,0,1.0"
+           position="0,0,0"
            orientation="0,0,0"
            color="yellow"
            intensity="3.0"
