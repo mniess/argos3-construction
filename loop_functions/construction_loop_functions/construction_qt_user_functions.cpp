@@ -6,14 +6,14 @@ using namespace argos;
 /****************************************/
 /****************************************/
 
-CForagingQTUserFunctions::CForagingQTUserFunctions() {
-   RegisterUserFunction<CForagingQTUserFunctions,CFootBotEntity>(&CForagingQTUserFunctions::Draw);
+CConstructionQTUserFunctions::CConstructionQTUserFunctions() {
+   RegisterUserFunction<CConstructionQTUserFunctions,CFootBotEntity>(&CConstructionQTUserFunctions::Draw);
 }
 
 /****************************************/
 /****************************************/
 
-void CForagingQTUserFunctions::Draw(CFootBotEntity& c_entity) {
+void CConstructionQTUserFunctions::Draw(CFootBotEntity& c_entity) {
     auto& cController = dynamic_cast<CFootBotConstruction&>(c_entity.GetControllableEntity().GetController());
    DrawText(CVector3(0.0, 0.0, 0.3),   // position
             c_entity.GetId());
@@ -22,4 +22,4 @@ void CForagingQTUserFunctions::Draw(CFootBotEntity& c_entity) {
 /****************************************/
 /****************************************/
 
-REGISTER_QTOPENGL_USER_FUNCTIONS(CForagingQTUserFunctions, "construction_qt_user_functions")
+REGISTER_QTOPENGL_USER_FUNCTIONS(CConstructionQTUserFunctions, "construction_qt_user_functions")
