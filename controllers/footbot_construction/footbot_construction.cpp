@@ -36,11 +36,12 @@ void CFootBotConstruction::SWheelTurningParams::Init(TConfigurationNode& t_node)
    }
 }
 
-CFootBotConstruction::SStateData::SStateData() {}
+CFootBotConstruction::SStateData::SStateData() = default;
 
 
 void CFootBotConstruction::SStateData::Init(TConfigurationNode& t_node) {
     Reset();
+    GetNodeAttribute(t_node, "ticksToFlee", TicksToFlee);
 }
 
 void CFootBotConstruction::SStateData::Reset() {
@@ -76,6 +77,7 @@ void CFootBotConstruction::Init(TConfigurationNode& t_node) {
       m_sDiffusionParams.Init(GetNode(t_node, "diffusion"));
       /* Wheel turning */
       m_sWheelTurningParams.Init(GetNode(t_node, "wheel_turning"));
+       m_sStateData.Init(GetNode(t_node,"state"));
    }
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error initializing the foot-bot construction controller for robot \"" << GetId() << "\"", ex);
@@ -86,6 +88,7 @@ void CFootBotConstruction::Init(TConfigurationNode& t_node) {
    /* Create a random number generator. We use the 'argos' category so
       that creation, reset, seeding and cleanup are managed by ARGoS. */
    m_pcRNG = CRandom::CreateRNG("argos");
+    m_pcCamera -> Enable();
    Reset();
 }
 /****************************************/
@@ -105,6 +108,10 @@ void CFootBotConstruction::ControlStep() {
          ReturnToNest();
          break;
       }
+       case SStateData::STATE_FLEE: {
+           Flee();
+           break;
+       }
       default: {
          LOGERR << "We can't be here, there's a bug!" << std::endl;
       }
@@ -140,16 +147,17 @@ CVector2 CFootBotConstruction::LightVector() {
    const CCI_FootBotLightSensor::TReadings& tLightReads = m_pcLight->GetReadings();
    /* Sum them together */
    CVector2 cAccumulator;
+   Real maxVal = 0;
    for (auto tLightRead : tLightReads) {
       cAccumulator += CVector2(tLightRead.Value, tLightRead.Angle);
+      if(maxVal < tLightRead.Value) maxVal=tLightRead.Value;
    }
-   /* If the light was perceived, return the vector */
     return cAccumulator.Length() > 0.0f ? CVector2(1.0f, cAccumulator.Angle()) : CVector2();
 }
 
 /****************************************/
 
-CVector2 CFootBotConstruction::DiffusionVector(bool& b_collision) {
+CVector2 CFootBotConstruction::DiffusionVector(bool* b_collision) {
    /* Get readings from proximity sensor */
    const CCI_FootBotProximitySensor::TReadings& tProxReads = m_pcProximity->GetReadings();
    /* Sum them together */
@@ -162,13 +170,15 @@ CVector2 CFootBotConstruction::DiffusionVector(bool& b_collision) {
       it */
    if(m_sDiffusionParams.GoStraightAngleRange.WithinMinBoundIncludedMaxBoundIncluded(cDiffusionVector.Angle()) &&
       cDiffusionVector.Length() < m_sDiffusionParams.Delta ) {
-      b_collision = false;
+       if(b_collision != nullptr)
+            *b_collision = false;
       return CVector2::X;
    }
    else {
-      b_collision = true;
-      cDiffusionVector.Normalize();
-      return -cDiffusionVector;
+       if(b_collision != nullptr)
+           *b_collision = true;
+       cDiffusionVector.Normalize();
+       return -cDiffusionVector;
    }
 }
 
@@ -272,6 +282,8 @@ void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
    m_pcWheels->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
 }
 
+
+
 /****************************************/
 /****************************************/
 
@@ -283,10 +295,9 @@ void CFootBotConstruction::Rest() {
 /****************************************/
 
 void CFootBotConstruction::Explore() {
-   m_pcCamera->Enable();
    CVector2 cMove = CVector2::X;
    CVector2 cCCyl = LedVector(CColor().PURPLE);
-   /*Cylinder seen, move towards it*/
+   /*Cylinder detected, move towards it*/
    if(cCCyl.Length() != 0) {
       // Cylinder is within reach, grip it!
       if (cCCyl.Length() < 10) {
@@ -300,8 +311,7 @@ void CFootBotConstruction::Explore() {
           cMove = cCCyl;
       }
    } else { //wander
-      bool bCollision;
-      cMove = DiffusionVector(bCollision) + RandomVector();
+      cMove = DiffusionVector(nullptr) + RandomVector();
    }
 
     SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
@@ -310,24 +320,53 @@ void CFootBotConstruction::Explore() {
 /****************************************/
 
 void CFootBotConstruction::ReturnToNest() {
-   bool bCollision;
-    CVector2 cMove = DiffusionVector(bCollision) + LightVector()*5 + RandomVector(-90,90);
+    if(DistToNest() < 0.02) {
+        SetState(SStateData::STATE_FLEE);
+    }
+    CVector2 cMove = DiffusionVector(nullptr) + LightVector()*5 + RandomVector(-90,90);
     SetWheelSpeeds(
             m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
 }
 
-void CFootBotConstruction::SetState(CFootBotConstruction::SStateData::EState newState) {
+/****************************************/
+
+void CFootBotConstruction::Flee() {
+    if(fleeCounter < m_sStateData.TicksToFlee) {
+        fleeCounter++;
+        CVector2 cMove = DiffusionVector(nullptr) - LightVector() + RandomVector(-90,90);
+        SetWheelSpeeds(
+                m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+    }else{
+        SetState(SStateData::STATE_EXPLORING);
+    }
+}
+
+
+/****************************************/
+/****************************************/
+
+void CFootBotConstruction::SetState(SStateData::EState newState) {
     switch(newState){
         case SStateData::STATE_RESTING: {
+            grip(false);
             m_pcLEDs->SetAllColors(CColor::MAGENTA);
             break;
         }
         case SStateData::STATE_EXPLORING: {
+            m_pcCamera->Enable();
+            grip(false);
             m_pcLEDs->SetAllColors(CColor::GREEN);
             break;
         }
         case SStateData::STATE_RETURN_TO_NEST: {
+            m_pcCamera->Enable();
             m_pcLEDs->SetAllColors(CColor::BLUE);
+            break;
+        }
+        case SStateData::STATE_FLEE: {
+            m_pcCamera->Disable();
+            grip(false);
+            m_pcLEDs->SetAllColors(CColor::WHITE);
             break;
         }
         default: {
@@ -335,10 +374,23 @@ void CFootBotConstruction::SetState(CFootBotConstruction::SStateData::EState new
         }
 
     }
+    fleeCounter = 0;
     m_sStateData.State = newState;
 }
 
-/****************************************/
-/****************************************/
+
+
+Real CFootBotConstruction::DistToNest() {
+    const CCI_FootBotLightSensor::TReadings& tLightReads = m_pcLight->GetReadings();
+    Real maxVal = 0;
+    for (auto tLightRead : tLightReads) {
+        if(maxVal < tLightRead.Value) maxVal=tLightRead.Value;
+    }
+    return 1-maxVal;
+}
+
+
+
+
 
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")

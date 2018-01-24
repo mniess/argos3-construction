@@ -36,6 +36,7 @@
                        soft_turn_angle_threshold="70"
                        no_turn_angle_threshold="10"
                        max_speed="10" />
+          <state  ticksToFlee="300"/>
       </params>
     </footbot_construction_controller>
   </controllers>
@@ -70,10 +71,10 @@
     </box>
 
     <light id="light_1"
-           position="0,0,0"
+           position="0,0,0.1"
            orientation="0,0,0"
            color="yellow"
-           intensity="3.0"
+           intensity="100.0"
            medium="leds" />
 
     <!-- Footbots -->
@@ -91,7 +92,7 @@
       <position method="uniform" min="-5,-5,0" max="5,5,0" />
       <orientation method="constant" values="0,0,0" />
       <entity quantity="10" max_trials="100">
-        <cylinder id="c" height="0.5" radius="0.1" mass="0.1" movable="true">
+        <cylinder id="c" height="0.5" radius="0.1" mass="1" movable="true">
           <leds medium="leds">
             <led offset=" 0.0, 0.1,0.3" anchor="origin" color="purple" />
             <led offset=" 0.1, 0,  0.3" anchor="origin" color="purple" />
@@ -112,7 +113,9 @@
   <!-- * Physics engines * -->
   <!-- ******************* -->
   <physics_engines>
-    <dynamics2d id="dyn2d" />
+    <dynamics2d id="dyn2d"
+                cylinder_linear_friction="15.0"
+                cylinder_angular_friction="10.0"/>
   </physics_engines>
 
   <!-- ********* -->

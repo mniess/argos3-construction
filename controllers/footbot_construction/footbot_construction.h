@@ -96,16 +96,18 @@ public:
     * Contains all the state information about the controller.
     */
    struct SStateData {
-      /* The three possible states in which the controller can be */
-      enum EState {
-         STATE_RESTING = 0,
-         STATE_EXPLORING,
-         STATE_RETURN_TO_NEST
-      } State;
+       /* The three possible states in which the controller can be */
+       enum EState {
+          STATE_RESTING = 0,
+          STATE_EXPLORING,
+          STATE_RETURN_TO_NEST,
+          STATE_FLEE,
+       } State;
 
-      SStateData();
-      void Init(TConfigurationNode& t_node);
-      void Reset();
+       int TicksToFlee;
+       SStateData();
+       void Init(TConfigurationNode& t_node);
+       void Reset();
    };
 
 public:
@@ -187,7 +189,7 @@ private:
     * a collision avoidance just happened or not. It is necessary for the
     * collision rule.
     */
-   CVector2 DiffusionVector(bool& b_collision);
+   CVector2 DiffusionVector(bool* b_collision);
 
     /*
      * Get a vector, that points to the closest led in specific color
@@ -241,6 +243,8 @@ private:
 
     bool GripperLocked = false;
 
+    int fleeCounter = 0;
+
     CVector2 RandomVector(int minDeg, int maxDeg);
 
     bool HasItem();
@@ -251,6 +255,10 @@ private:
         GripperLocked = lock;
         lock ? m_pcGripper->LockPositive() : m_pcGripper->Unlock();
     }
+
+    Real DistToNest();
+
+    void Flee();
 };
 
 #endif
