@@ -91,7 +91,7 @@
     <distribute>
       <position method="uniform" min="-5,-5,0" max="5,5,0" />
       <orientation method="constant" values="0,0,0" />
-      <entity quantity="10" max_trials="100">
+      <entity quantity="20" max_trials="100">
         <cylinder id="c" height="0.5" radius="0.1" mass="1" movable="true">
           <leds medium="leds">
             <led offset=" 0.0, 0.1,0.3" anchor="origin" color="purple" />

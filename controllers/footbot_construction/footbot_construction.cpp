@@ -301,11 +301,12 @@ void CFootBotConstruction::Explore() {
    if(cCCyl.Length() != 0) {
       // Cylinder is within reach, grip it!
       if (cCCyl.Length() < 10) {
-         if (cCCyl.Angle() < ToRadians(CDegrees(10)) || cCCyl.Angle() > ToRadians(CDegrees(-10))) {
+         if (cCCyl.Angle() < ToRadians(CDegrees(10)) && cCCyl.Angle() > ToRadians(CDegrees(-10))) {
              grip(true);
              SetState(SStateData::STATE_RETURN_TO_NEST);
          } else {
-            //TODO rotate to cylinder
+            //TODO rotate to cylinder without moving forward
+             cMove = cCCyl;
          }
       } else { //move towards cylinder
           cMove = cCCyl;
