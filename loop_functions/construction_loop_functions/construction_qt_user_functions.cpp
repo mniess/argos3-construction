@@ -7,16 +7,16 @@ using namespace argos;
 /****************************************/
 
 CConstructionQTUserFunctions::CConstructionQTUserFunctions() {
-   RegisterUserFunction<CConstructionQTUserFunctions,CFootBotEntity>(&CConstructionQTUserFunctions::Draw);
+  RegisterUserFunction<CConstructionQTUserFunctions, CFootBotEntity>(&CConstructionQTUserFunctions::Draw);
 }
 
 /****************************************/
 /****************************************/
 
-void CConstructionQTUserFunctions::Draw(CFootBotEntity& c_entity) {
-    auto& cController = dynamic_cast<CFootBotConstruction&>(c_entity.GetControllableEntity().GetController());
-   DrawText(CVector3(0.0, 0.0, 0.3),   // position
-            c_entity.GetId());
+void CConstructionQTUserFunctions::Draw(CFootBotEntity &c_entity) {
+  auto &cController = dynamic_cast<CFootBotConstruction &>(c_entity.GetControllableEntity().GetController());
+  DrawText(CVector3(0.0, 0.0, 0.3),   // position
+           c_entity.GetId());
 }
 
 /****************************************/

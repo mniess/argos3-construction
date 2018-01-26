@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(argos3_examples)
 
-if(APPLE)
-  option(ASAN "Use Clang Address Sanitizer in Debug builds")
-  if(ASAN)
-    # Add address sanitizer support for CLang
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-optimize-sibling-calls -fno-omit-frame-pointer")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-optimize-sibling-calls -fno-omit-frame-pointer")
-    set(CMAKE_MODULE_LINKER_FLAGS_DEBUG "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} -fsanitize=address")
-    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} -fsanitize=address")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} -fsanitize=address")
-  endif(ASAN)
-endif(APPLE)
+if (APPLE)
+    option(ASAN "Use Clang Address Sanitizer in Debug builds")
+    if (ASAN)
+        # Add address sanitizer support for CLang
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+        set(CMAKE_MODULE_LINKER_FLAGS_DEBUG "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} -fsanitize=address")
+        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} -fsanitize=address")
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} -fsanitize=address")
+    endif (ASAN)
+endif (APPLE)
 
 # Deactivate RPATH for MacOSX
 set(CMAKE_MACOSX_RPATH 0)
@@ -31,9 +31,9 @@ include(ARGoSCheckQTOpenGL)
 
 # Look for the (optional) galib library
 find_package(GALIB)
-if(GALIB_FOUND)
-  include_directories(${GALIB_INCLUDE_DIRS})
-endif(GALIB_FOUND)
+if (GALIB_FOUND)
+    include_directories(${GALIB_INCLUDE_DIRS})
+endif (GALIB_FOUND)
 
 # Find Lua
 find_package(Lua52 REQUIRED)

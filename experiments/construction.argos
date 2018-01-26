@@ -1,144 +1,144 @@
 <?xml version="1.0" ?>
 <argos-configuration>
 
-  <!-- ************************* -->
-  <!-- * General configuration * -->
-  <!-- ************************* -->
-  <framework>
-    <system threads="0" />
-    <experiment length="0"
-                ticks_per_second="10"
-                random_seed="123" />
-  </framework>
+    <!-- ************************* -->
+    <!-- * General configuration * -->
+    <!-- ************************* -->
+    <framework>
+        <system threads="0"/>
+        <experiment length="0"
+                    ticks_per_second="10"
+                    random_seed="123"/>
+    </framework>
 
-  <!-- *************** -->
-  <!-- * Controllers * -->
-  <!-- *************** -->
-  <controllers>
-    <footbot_construction_controller id="ffc"
-                                 library="build/controllers/footbot_construction/libfootbot_construction">
-      <actuators>
-        <differential_steering implementation="default" />
-        <leds implementation="default" medium="inactive" />
-        <footbot_gripper implementation="default" />
-      </actuators>
-      <sensors>
-        <footbot_proximity implementation="default" show_rays="false" />
-        <footbot_light implementation="rot_z_only" show_rays="false" />
-        <colored_blob_omnidirectional_camera implementation="rot_z_only"
-                                             medium="leds"
-                                             show_rays="true" />
-      </sensors>
-      <params>
-        <diffusion go_straight_angle_range="-5:5"
-                   delta="0.1" />
-        <wheel_turning hard_turn_angle_threshold="90"
-                       soft_turn_angle_threshold="70"
-                       no_turn_angle_threshold="10"
-                       max_speed="10" />
-          <state  ticksToFlee="300"/>
-      </params>
-    </footbot_construction_controller>
-  </controllers>
+    <!-- *************** -->
+    <!-- * Controllers * -->
+    <!-- *************** -->
+    <controllers>
+        <footbot_construction_controller id="ffc"
+                                         library="build/controllers/footbot_construction/libfootbot_construction">
+            <actuators>
+                <differential_steering implementation="default"/>
+                <leds implementation="default" medium="inactive"/>
+                <footbot_gripper implementation="default"/>
+            </actuators>
+            <sensors>
+                <footbot_proximity implementation="default" show_rays="false"/>
+                <footbot_light implementation="rot_z_only" show_rays="false"/>
+                <colored_blob_omnidirectional_camera implementation="rot_z_only"
+                                                     medium="leds"
+                                                     show_rays="true"/>
+            </sensors>
+            <params>
+                <diffusion go_straight_angle_range="-5:5"
+                           delta="0.1"/>
+                <wheel_turning hard_turn_angle_threshold="90"
+                               soft_turn_angle_threshold="70"
+                               no_turn_angle_threshold="10"
+                               max_speed="10"/>
+                <state ticksToFlee="300"/>
+            </params>
+        </footbot_construction_controller>
+    </controllers>
 
-  <!-- ****************** -->
-  <!-- * Loop functions * -->
-  <!-- ****************** -->
-  <loop_functions library="build/loop_functions/construction_loop_functions/libconstruction_loop_functions"
-                  label="construction_loop_functions">
-  </loop_functions>
+    <!-- ****************** -->
+    <!-- * Loop functions * -->
+    <!-- ****************** -->
+    <loop_functions library="build/loop_functions/construction_loop_functions/libconstruction_loop_functions"
+                    label="construction_loop_functions">
+    </loop_functions>
 
-  <!-- *********************** -->
-  <!-- * Arena configuration * -->
-  <!-- *********************** -->
-  <arena size="10, 10, 2" center="0,0,1">
+    <!-- *********************** -->
+    <!-- * Arena configuration * -->
+    <!-- *********************** -->
+    <arena size="10, 10, 2" center="0,0,1">
 
-    <floor id="floor"
-           source="loop_functions"
-           pixels_per_meter="1" />
+        <floor id="floor"
+               source="loop_functions"
+               pixels_per_meter="1"/>
 
-    <box id="wall_north" size="10,0.1,0.5" movable="false">
-      <body position="0,5,0" orientation="0,0,0" />
-    </box>
-    <box id="wall_south" size="10,0.1,0.5" movable="false">
-      <body position="0,-5,0" orientation="0,0,0" />
-    </box>
-    <box id="wall_east" size="0.1,10,0.5" movable="false">
-      <body position="5,0,0" orientation="0,0,0" />
-    </box>
-    <box id="wall_west" size="0.1,10,0.5" movable="false">
-      <body position="-5,0,0" orientation="0,0,0" />
-    </box>
+        <box id="wall_north" size="10,0.1,0.5" movable="false">
+            <body position="0,5,0" orientation="0,0,0"/>
+        </box>
+        <box id="wall_south" size="10,0.1,0.5" movable="false">
+            <body position="0,-5,0" orientation="0,0,0"/>
+        </box>
+        <box id="wall_east" size="0.1,10,0.5" movable="false">
+            <body position="5,0,0" orientation="0,0,0"/>
+        </box>
+        <box id="wall_west" size="0.1,10,0.5" movable="false">
+            <body position="-5,0,0" orientation="0,0,0"/>
+        </box>
 
-    <light id="light_1"
-           position="0,0,0.1"
-           orientation="0,0,0"
-           color="yellow"
-           intensity="100.0"
-           medium="leds" />
+        <light id="light_1"
+               position="0,0,0.1"
+               orientation="0,0,0"
+               color="yellow"
+               intensity="100.0"
+               medium="leds"/>
 
-    <!-- Footbots -->
-    <distribute>
-      <position method="uniform" min="-1,-1,0" max="1,1,0" />
-      <orientation method="uniform" min="0,0,0" max="360,0,0" />
-      <entity quantity="10" max_trials="100">
-        <foot-bot id="fb">
-          <controller config="ffc" />
-        </foot-bot>
-      </entity>
-    </distribute>
-    <!-- Cylinders -->
-    <distribute>
-      <position method="uniform" min="-5,-5,0" max="5,5,0" />
-      <orientation method="constant" values="0,0,0" />
-      <entity quantity="20" max_trials="100">
-        <cylinder id="c" height="0.5" radius="0.1" mass="1" movable="true">
-          <leds medium="leds">
-            <led offset=" 0.0, 0.1,0.3" anchor="origin" color="purple" />
-            <led offset=" 0.1, 0,  0.3" anchor="origin" color="purple" />
-            <led offset=" 0.0,-0.1,0.3" anchor="origin" color="purple" />
-            <led offset="-0.1, 0,  0.3" anchor="origin" color="purple" />
-            <led offset=" 0.071, 0.071,0.3" anchor="origin" color="purple" />
-            <led offset="-0.071, 0.071,0.3" anchor="origin" color="purple" />
-            <led offset=" 0.071,-0.071,0.3" anchor="origin" color="purple" />
-            <led offset="-0.071,-0.071,0.3" anchor="origin" color="purple" />
-          </leds>
-        </cylinder>
-      </entity>
-    </distribute>
+        <!-- Footbots -->
+        <distribute>
+            <position method="uniform" min="-1,-1,0" max="1,1,0"/>
+            <orientation method="uniform" min="0,0,0" max="360,0,0"/>
+            <entity quantity="10" max_trials="100">
+                <foot-bot id="fb">
+                    <controller config="ffc"/>
+                </foot-bot>
+            </entity>
+        </distribute>
+        <!-- Cylinders -->
+        <distribute>
+            <position method="uniform" min="-5,-5,0" max="5,5,0"/>
+            <orientation method="constant" values="0,0,0"/>
+            <entity quantity="20" max_trials="100">
+                <cylinder id="c" height="0.5" radius="0.1" mass="1" movable="true">
+                    <leds medium="leds">
+                        <led offset=" 0.0, 0.1,0.3" anchor="origin" color="purple"/>
+                        <led offset=" 0.1, 0,  0.3" anchor="origin" color="purple"/>
+                        <led offset=" 0.0,-0.1,0.3" anchor="origin" color="purple"/>
+                        <led offset="-0.1, 0,  0.3" anchor="origin" color="purple"/>
+                        <led offset=" 0.071, 0.071,0.3" anchor="origin" color="purple"/>
+                        <led offset="-0.071, 0.071,0.3" anchor="origin" color="purple"/>
+                        <led offset=" 0.071,-0.071,0.3" anchor="origin" color="purple"/>
+                        <led offset="-0.071,-0.071,0.3" anchor="origin" color="purple"/>
+                    </leds>
+                </cylinder>
+            </entity>
+        </distribute>
 
-  </arena>
+    </arena>
 
-  <!-- ******************* -->
-  <!-- * Physics engines * -->
-  <!-- ******************* -->
-  <physics_engines>
-    <dynamics2d id="dyn2d"
-                cylinder_linear_friction="15.0"
-                cylinder_angular_friction="10.0"/>
-  </physics_engines>
+    <!-- ******************* -->
+    <!-- * Physics engines * -->
+    <!-- ******************* -->
+    <physics_engines>
+        <dynamics2d id="dyn2d"
+                    cylinder_linear_friction="15.0"
+                    cylinder_angular_friction="10.0"/>
+    </physics_engines>
 
-  <!-- ********* -->
-  <!-- * Media * -->
-  <!-- ********* -->
-  <media>
-    <led id="leds" />
-    <led id="inactive" />
-  </media>
+    <!-- ********* -->
+    <!-- * Media * -->
+    <!-- ********* -->
+    <media>
+        <led id="leds"/>
+        <led id="inactive"/>
+    </media>
 
-  <!-- ****************** -->
-  <!-- * Visualization * -->
-  <!-- ****************** -->
-  <visualization>
-    <qt-opengl>
-      <camera>
-        <placement idx="0"
-                   position="0,0,9"
-                   look_at="0,0,0"
-                   lens_focal_length="20" />
-        </camera>
-      <user_functions label="construction_qt_user_functions" />
-    </qt-opengl>
-  </visualization>
+    <!-- ****************** -->
+    <!-- * Visualization * -->
+    <!-- ****************** -->
+    <visualization>
+        <qt-opengl>
+            <camera>
+                <placement idx="0"
+                           position="0,0,9"
+                           look_at="0,0,0"
+                           lens_focal_length="20"/>
+            </camera>
+            <user_functions label="construction_qt_user_functions"/>
+        </qt-opengl>
+    </visualization>
 
 </argos-configuration>

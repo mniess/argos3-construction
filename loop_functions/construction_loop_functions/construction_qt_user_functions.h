@@ -10,12 +10,12 @@ class CConstructionQTUserFunctions : public CQTOpenGLUserFunctions {
 
 public:
 
-   CConstructionQTUserFunctions();
+  CConstructionQTUserFunctions();
 
-   virtual ~CConstructionQTUserFunctions() {}
+  virtual ~CConstructionQTUserFunctions() {}
 
-   void Draw(CFootBotEntity& c_entity);
-   
+  void Draw(CFootBotEntity &c_entity);
+
 };
 
 #endif
