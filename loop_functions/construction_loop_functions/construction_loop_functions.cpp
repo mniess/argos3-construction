@@ -1,6 +1,7 @@
 #include <argos3/plugins/robots/foot-bot/simulator/footbot_entity.h>
 #include "construction_loop_functions.h"
 #include <argos3/plugins/simulator/entities/gripper_equipped_entity.h>
+#include <argos3/plugins/simulator/entities/cylinder_entity.h>
 
 /****************************************/
 /****************************************/
@@ -44,13 +45,17 @@ void CConstructionLoopFunctions::PreStep() {
   for (CSpace::TMapPerType::iterator it = tFBMap.begin(); it != tFBMap.end(); ++it) {
     /* Create a pointer to the current foot-bot */
     CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it->second);
-    CGripperEquippedEntity e = pcFB->GetGripperEquippedEntity();
-    if (e.IsGripping()) {
-      //CEmbodiedEntity eme = e.GetGrippedEntity();
-      //if("cylinder" == eme.GetTypeDescription() ){
-      //CCylinderEntity cylinder = any_cast<CCylinderEntity>(eme);
-      //cylinder.DisableLEDs();
-      //}
+    CGripperEquippedEntity &cGEE = pcFB->GetGripperEquippedEntity();
+
+    if (cGEE.IsGripping()) {
+      /* Get the gripped entity*/
+      CEntity &cE = cGEE.GetGrippedEntity().GetRootEntity();
+
+      if ("cylinder" == cE.GetTypeDescription()) {
+        /* cast to Cylinder*/
+        CCylinderEntity &cylinder = dynamic_cast<CCylinderEntity&>(cE);
+        cylinder.GetLEDEquippedEntity().SetAllLEDsColors(CColor::BLACK);
+      }
     }
   }
 }
