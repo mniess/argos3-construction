@@ -1,0 +1,3 @@
+[submodule "embedding/nsga2"]
+	path = embedding/nsga2
+	url = git@github.com:randUsr/nsga2.git
