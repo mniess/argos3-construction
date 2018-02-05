@@ -125,17 +125,20 @@ void CFootBotConstruction::Reset() {
   m_sStateData.Reset();
   /* Set LED color */
   m_pcLEDs->SetAllColors(CColor::GREEN);
+  grip(false);
 }
 
 /****************************************/
 /****************************************/
 
 void CFootBotConstruction::UpdateState() {
-  //TODO remove necessity for this hack, bots sometimes don't grip correct.
+  //bots sometimes don't grip correct.
+  //TODO make independent from States
   if (m_sStateData.State == SStateData::STATE_RETURN_TO_NEST &&
       !HasItem()) {
+    SetState(SStateData::STATE_EXPLORING);
     m_sStateData.State = SStateData::STATE_EXPLORING;
-    m_pcGripper->Unlock();
+    grip(false);
   }
 }
 
@@ -286,8 +289,7 @@ void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
 /****************************************/
 
 void CFootBotConstruction::Rest() {
-  m_pcLEDs->SetAllColors(CColor::GREEN);
-  m_sStateData.State = SStateData::STATE_EXPLORING;
+  SetState(SStateData::STATE_EXPLORING);
 }
 
 /****************************************/
@@ -298,13 +300,16 @@ void CFootBotConstruction::Explore() {
   /*Cylinder detected, move towards it*/
   if (cCCyl.Length() != 0) {
     // Cylinder is within reach, grip it!
-    if (cCCyl.Length() < 10) {
-      if (cCCyl.Angle() < ToRadians(CDegrees(10)) && cCCyl.Angle() > ToRadians(CDegrees(-10))) {
+    if (cCCyl.Length() < 9.5) {
+      if (cCCyl.Angle() < ToRadians(CDegrees(2)) && cCCyl.Angle() > ToRadians(CDegrees(-2))) {
         grip(true);
         SetState(SStateData::STATE_RETURN_TO_NEST);
       } else {
-        //TODO rotate to cylinder without moving forward
-        cMove = cCCyl;
+        int rotDir = cCCyl.Angle()<CRadians(0) ? 1 :-1;
+
+        m_pcWheels->SetLinearVelocity(rotDir, -rotDir);
+        m_pcLEDs->SetAllColors(CColor::ORANGE);
+        return;
       }
     } else { //move towards cylinder
       cMove = cCCyl;
