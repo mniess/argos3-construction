@@ -6,7 +6,7 @@
     <!-- ************************* -->
     <framework>
         <system threads="0"/>
-        <experiment length="0"
+        <experiment length="60"
                     ticks_per_second="10"
                     random_seed="123"/>
     </framework>
@@ -46,6 +46,7 @@
     <!-- ****************** -->
     <loop_functions library="build/loop_functions/construction_loop_functions/libconstruction_loop_functions"
                     label="construction_loop_functions">
+        <construction buildingRadius="1"/>
     </loop_functions>
 
     <!-- *********************** -->
@@ -55,7 +56,7 @@
 
         <floor id="floor"
                source="loop_functions"
-               pixels_per_meter="1"/>
+               pixels_per_meter="100"/>
 
         <box id="wall_north" size="10,0.1,0.5" movable="false">
             <body position="0,5,0" orientation="0,0,0"/>

@@ -18,10 +18,14 @@ public:
   virtual void Init(TConfigurationNode &t_tree);
   virtual void Reset();
   virtual void Destroy();
+  virtual void PostExperiment();
   virtual CColor GetFloorColor(const CVector2 &c_position_on_plane);
   virtual void PreStep();
+  virtual Real Performance();
 
 private:
+
+  Real buildingRadius;
 
 };
 
