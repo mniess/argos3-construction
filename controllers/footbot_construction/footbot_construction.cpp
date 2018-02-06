@@ -66,9 +66,11 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
     m_pcWheels = GetActuator<CCI_DifferentialSteeringActuator>("differential_steering");
     m_pcLEDs = GetActuator<CCI_LEDsActuator>("leds");
     m_pcGripper = GetActuator<CCI_FootBotGripperActuator>("footbot_gripper");
+    m_pcTurret = GetActuator<CCI_FootBotTurretActuator>("footbot_turret");
     m_pcProximity = GetSensor<CCI_FootBotProximitySensor>("footbot_proximity");
     m_pcLight = GetSensor<CCI_FootBotLightSensor>("footbot_light");
     m_pcCamera = GetSensor<CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
+    m_pcTurretEnc = GetSensor<CCI_FootBotTurretEncoderSensor>("footbot_turret_encoder");
     /*
      * Parse XML parameters
      */
@@ -89,6 +91,7 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
      that creation, reset, seeding and cleanup are managed by ARGoS. */
   m_pcRNG = CRandom::CreateRNG("argos");
   m_pcCamera->Enable();
+  m_pcTurret->SetPassiveMode();
   Reset();
 }
 /****************************************/

@@ -17,10 +17,12 @@
 #include <argos3/plugins/robots/generic/control_interface/ci_leds_actuator.h>
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_actuator.h>
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_gripper_actuator.h>
+#include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_turret_actuator.h>
 #include <argos3/plugins/robots/generic/control_interface/ci_range_and_bearing_sensor.h>
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_proximity_sensor.h>
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_light_sensor.h>
 #include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_motor_ground_sensor.h>
+#include <argos3/plugins/robots/foot-bot/control_interface/ci_footbot_turret_encoder_sensor.h>
 #include <argos3/plugins/robots/generic/control_interface/ci_colored_blob_omnidirectional_camera_sensor.h>
 
 /*
@@ -224,10 +226,14 @@ private:
   CCI_LEDsActuator *m_pcLEDs;
   /* Pointer to the foot-bot gripper actuator */
   CCI_FootBotGripperActuator *m_pcGripper;
+  /* Pointer to the foot-bot turret actuator */
+  CCI_FootBotTurretActuator *m_pcTurret;
   /* Pointer to the foot-bot proximity sensor */
   CCI_FootBotProximitySensor *m_pcProximity;
   /* Pointer to the foot-bot light sensor */
   CCI_FootBotLightSensor *m_pcLight;
+  /* Pointer to the foot-bot turret encoder */
+  CCI_FootBotTurretEncoderSensor *m_pcTurretEnc;
 
   CCI_ColoredBlobOmnidirectionalCameraSensor *m_pcCamera;
   /* The random number generator */
@@ -252,7 +258,14 @@ private:
 
   void grip(bool lock) {
     GripperLocked = lock;
-    lock ? m_pcGripper->LockPositive() : m_pcGripper->Unlock();
+    if(lock){
+      m_pcGripper->LockPositive();
+      m_pcTurret->SetPassiveMode();
+    } else {
+      m_pcGripper->Unlock();
+      m_pcTurret->SetPositionControlMode();
+      m_pcTurret->SetRotation(CRadians(0));
+    }
   }
 
   Real DistToNest();
