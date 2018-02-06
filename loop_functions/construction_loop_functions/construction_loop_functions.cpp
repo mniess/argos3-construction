@@ -48,8 +48,6 @@ CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_p
   float a = 0.25;
   if(c_position_on_plane.Length() < buildingRadius+a && c_position_on_plane.Length() > buildingRadius-a)
     return CColor::YELLOW;
-  if(c_position_on_plane.GetX() > 0 && c_position_on_plane.GetY() > 1)
-    return CColor::GREEN;
   return CColor::WHITE;
 }
 
@@ -113,7 +111,7 @@ Real CConstructionLoopFunctions::Performance() {
   for (int i = 0; i < 360; ++i) {
     CRadians rayCastAngle = ToRadians(CDegrees(i));
     CVector2 rayCast = CVector2(1,rayCastAngle);
-    /* Check if any valid cylinder interects with raycast*/
+    /* Check if any valid cylinder intersect the raycast*/
     for (CVector2 currCyl:validCylinders) {
       Real dot = currCyl.DotProduct(rayCast);
       if(dot < 0) {
