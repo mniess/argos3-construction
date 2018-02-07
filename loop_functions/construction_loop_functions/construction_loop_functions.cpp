@@ -79,12 +79,12 @@ void CConstructionLoopFunctions::PreStep() {
         CCylinderEntity &cylinder = dynamic_cast<CCylinderEntity&>(cE);
         cylinder.GetLEDEquippedEntity().SetAllLEDsColors(CColor::BLACK);
       }
-    } else {
-      //LOG << pcFB->GetId() << " " << std::endl;
-      cGEE.SetDirection(CVector3::Y);
-      //cGEE.SetDirection(CVector3::X);
     }
   }
+}
+
+void CConstructionLoopFunctions::ConfigureFromGenome(){
+
 }
 
 Real CConstructionLoopFunctions::Performance() {

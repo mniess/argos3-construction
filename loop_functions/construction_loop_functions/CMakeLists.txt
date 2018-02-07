@@ -7,7 +7,7 @@ if (ARGOS_COMPILE_QTOPENGL)
             construction_qt_user_functions.cpp)
 endif (ARGOS_COMPILE_QTOPENGL)
 
-add_library(construction_loop_functions MODULE ${construction_loop_functions_SOURCES})
+add_library(construction_loop_functions SHARED ${construction_loop_functions_SOURCES})
 target_link_libraries(construction_loop_functions
         footbot_construction
         argos3core_simulator
