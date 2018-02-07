@@ -1,8 +1,6 @@
 #include "footbot_construction.h"
 
 /****************************************/
-/****************************************/
-
 CFootBotConstruction::SDiffusionParams::SDiffusionParams() :
     GoStraightAngleRange(CRadians(-1.0f), CRadians(1.0f)) {}
 
@@ -39,15 +37,13 @@ void CFootBotConstruction::SWheelTurningParams::Init(TConfigurationNode &t_node)
 CFootBotConstruction::SStateData::SStateData() = default;
 
 void CFootBotConstruction::SStateData::Init(TConfigurationNode &t_node) {
-  Reset();
-  GetNodeAttribute(t_node, "ticksToFlee", TicksToFlee);
+  //State will be set by SetState() function
 }
 
 void CFootBotConstruction::SStateData::Reset() {
-  State = STATE_EXPLORING;
+  //State will be set by SetState() function
 }
 
-/****************************************/
 /****************************************/
 
 CFootBotConstruction::CFootBotConstruction() :
@@ -71,9 +67,6 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
     m_pcLight = GetSensor<CCI_FootBotLightSensor>("footbot_light");
     m_pcCamera = GetSensor<CCI_ColoredBlobOmnidirectionalCameraSensor>("colored_blob_omnidirectional_camera");
     m_pcTurretEnc = GetSensor<CCI_FootBotTurretEncoderSensor>("footbot_turret_encoder");
-    /*
-     * Parse XML parameters
-     */
     /* Diffusion algorithm */
     m_sDiffusionParams.Init(GetNode(t_node, "diffusion"));
     /* Wheel turning */
@@ -84,68 +77,75 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
     THROW_ARGOSEXCEPTION_NESTED(
         "Error initializing the foot-bot construction controller for robot \"" << GetId() << "\"", ex);
   }
-  /*
-   * Initialize other stuff
-   */
+
   /* Create a random number generator. We use the 'argos' category so
      that creation, reset, seeding and cleanup are managed by ARGoS. */
   m_pcRNG = CRandom::CreateRNG("argos");
   m_pcCamera->Enable();
   m_pcTurret->SetPassiveMode();
-  Reset();
+
+  SetState(SStateData::STATE_ANTIPHOTOTAXIS);
 }
-/****************************************/
 
 void CFootBotConstruction::ControlStep() {
-  UpdateState();
-  switch (m_sStateData.State) {
-  case SStateData::STATE_RESTING: {
-    Rest();
-    break;
-  }
-  case SStateData::STATE_EXPLORING: {
-    Explore();
-    break;
-  }
-  case SStateData::STATE_RETURN_TO_NEST: {
-    ReturnToNest();
-    break;
-  }
-  case SStateData::STATE_FLEE: {
-    Flee();
-    break;
-  }
-  default: {
-    LOGERR << "We can't be here, there's a bug!" << std::endl;
-  }
+
+  if (m_sStateData.Action != SStateData::NOACTION) { //Actions have Priority
+
+    bool success;
+    switch (m_sStateData.Action) {
+    case SStateData::ACTION_PICKUP: {
+      success = PickUpAction();
+      break;
+    }
+    case SStateData::ACTION_DROP: {
+      success = DropAction();
+      break;
+    }
+    default: {
+      LOGERR << "We can't be here, there's a bug!" << std::endl;
+    }
+    }
+
+    if(success) {
+      m_sStateData.Action = SStateData::NOACTION;
+    }
+
+  } else { // Perform Movement and check whether to switch
+
+    m_sStateData.TicksInState++;
+    switch (m_sStateData.State) {
+    case SStateData::STATE_EXPLORE: {
+      Explore();
+      if(false) {
+        SetState(SStateData::STATE_PHOTOTAXIS);
+      }
+      break;
+    }
+    case SStateData::STATE_PHOTOTAXIS: {
+      Phototaxis();
+      if(false) {
+        SetState(SStateData::STATE_ANTIPHOTOTAXIS);
+      }
+      break;
+    }
+    case SStateData::STATE_ANTIPHOTOTAXIS: {
+      AntiPhototaxis();
+      if(false) {
+        SetState(SStateData::STATE_EXPLORE);
+      }
+      break;
+    }
+    default: {
+      LOGERR << "We can't be here, there's a bug!" << std::endl;
+    }
+    }
   }
 }
-
-/****************************************/
 
 void CFootBotConstruction::Reset() {
-  /* Reset robot state */
-  m_sStateData.Reset();
-  /* Set LED color */
-  m_pcLEDs->SetAllColors(CColor::GREEN);
-  grip(false);
+  SetState(SStateData::STATE_ANTIPHOTOTAXIS);
 }
 
-/****************************************/
-/****************************************/
-
-void CFootBotConstruction::UpdateState() {
-  //bots sometimes don't grip correct.
-  //TODO make independent from States
-  if (m_sStateData.State == SStateData::STATE_RETURN_TO_NEST &&
-      !HasItem()) {
-    SetState(SStateData::STATE_EXPLORING);
-    m_sStateData.State = SStateData::STATE_EXPLORING;
-    grip(false);
-  }
-}
-
-/****************************************/
 /****************************************/
 
 CVector2 CFootBotConstruction::LightVector() {
@@ -159,10 +159,8 @@ CVector2 CFootBotConstruction::LightVector() {
     if (maxVal < tLightRead.Value)
       maxVal = tLightRead.Value;
   }
-  return cAccumulator.Length() > 0.0f ? CVector2(1.0f, cAccumulator.Angle()) : CVector2();
+  return cAccumulator.Length() > 0.0f ? CVector2(maxVal, cAccumulator.Angle()) : CVector2();
 }
-
-/****************************************/
 
 CVector2 CFootBotConstruction::DiffusionVector(bool *b_collision) {
   /* Get readings from proximity sensor */
@@ -187,8 +185,6 @@ CVector2 CFootBotConstruction::DiffusionVector(bool *b_collision) {
     return -cDiffusionVector;
   }
 }
-
-/****************************************/
 
 CVector2 CFootBotConstruction::LedVector(CColor color) const {
   CVector2 ledV;
@@ -218,6 +214,16 @@ CVector2 CFootBotConstruction::RandomVector(int minDeg = 0, int maxDeg = 360) {
 
 bool CFootBotConstruction::HasItem() {
   return (GripperLocked && LedVector(CColor::PURPLE).Length() < 12);
+}
+
+Real CFootBotConstruction::DistToNest() {
+  const CCI_FootBotLightSensor::TReadings &tLightReads = m_pcLight->GetReadings();
+  Real maxVal = 0;
+  for (auto tLightRead : tLightReads) {
+    if (maxVal < tLightRead.Value)
+      maxVal = tLightRead.Value;
+  }
+  return 1 - maxVal;
 }
 
 void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
@@ -286,93 +292,76 @@ void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
   m_pcWheels->SetLinearVelocity(fLeftWheelSpeed, fRightWheelSpeed);
 }
 
-
-
-/****************************************/
-/****************************************/
-
-void CFootBotConstruction::Rest() {
-  SetState(SStateData::STATE_EXPLORING);
-}
-
 /****************************************/
 
 void CFootBotConstruction::Explore() {
-  CVector2 cMove = CVector2::X;
-  CVector2 cCCyl = LedVector(CColor().PURPLE);
-  /*Cylinder detected, move towards it*/
-  if (cCCyl.Length() != 0) {
-    // Cylinder is within reach, grip it!
-    if (cCCyl.Length() < 9.5) {
-      if (cCCyl.Angle() < ToRadians(CDegrees(2)) && cCCyl.Angle() > ToRadians(CDegrees(-2))) {
-        grip(true);
-        SetState(SStateData::STATE_RETURN_TO_NEST);
-      } else {
-        int rotDir = cCCyl.Angle()<CRadians(0) ? 1 :-1;
+  CVector2 cMove = DiffusionVector(nullptr) + RandomVector();
+  SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+}
 
-        m_pcWheels->SetLinearVelocity(rotDir, -rotDir);
-        m_pcLEDs->SetAllColors(CColor::ORANGE);
-        return;
-      }
-    } else { //move towards cylinder
-      cMove = cCCyl;
-    }
-  } else { //wander
-    cMove = DiffusionVector(nullptr) + RandomVector();
+void CFootBotConstruction::Phototaxis() {
+  CVector2 cMove = DiffusionVector(nullptr) + LightVector().Normalize() * 2 + RandomVector();
+  SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+}
+
+void CFootBotConstruction::AntiPhototaxis() {
+  LOG << GetId();
+  if(LightVector().Length() == 0) {
+    LOG << GetId() << "no light detected!" << std::endl;
   }
-
+  CVector2 cMove = DiffusionVector(nullptr) - LightVector().Normalize() + RandomVector();
   SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
 }
 
 /****************************************/
 
-void CFootBotConstruction::ReturnToNest() {
-  if (DistToNest() < 0.02) {
-    SetState(SStateData::STATE_FLEE);
-  }
-  CVector2 cMove = DiffusionVector(nullptr) + LightVector() * 5 + RandomVector(-90, 90);
-  SetWheelSpeeds(
-      m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+bool CFootBotConstruction::DropAction() {
+  GripperLocked = false;
+  m_pcGripper->Unlock();
+  m_pcTurret->SetPositionControlMode();
+  m_pcTurret->SetRotation(CRadians(0));
+  return true;
 }
 
-/****************************************/
+bool CFootBotConstruction::PickUpAction() {
+  CVector2 cCCyl = LedVector(CColor().PURPLE);
 
-void CFootBotConstruction::Flee() {
-  if (fleeCounter < m_sStateData.TicksToFlee) {
-    fleeCounter++;
-    CVector2 cMove = DiffusionVector(nullptr) - LightVector() + RandomVector(-90, 90);
-    SetWheelSpeeds(
-        m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+  if (cCCyl.Length() != 0) { // Cylinder detected
+    if (cCCyl.Length() < 9.5) { // Cylinder is within reach, grip it!
+      if (cCCyl.Angle() < ToRadians(CDegrees(2)) && cCCyl.Angle() > ToRadians(CDegrees(-2))) {
+        GripperLocked = true;
+        m_pcGripper->LockPositive();
+        m_pcTurret->SetPassiveMode();
+        return true;
+      } else {
+        int rotDir = cCCyl.Angle() < CRadians(0) ? 1 : -1;
+
+        m_pcWheels->SetLinearVelocity(rotDir, -rotDir);
+        m_pcLEDs->SetAllColors(CColor::ORANGE);
+      }
+    } else { //move towards cylinder
+      SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cCCyl.Normalize());
+      return false;
+    }
   } else {
-    SetState(SStateData::STATE_EXPLORING);
+    /* if no cylinder found don't block*/
+    return true;
   }
 }
 
-
-/****************************************/
 /****************************************/
 
 void CFootBotConstruction::SetState(SStateData::EState newState) {
   switch (newState) {
-  case SStateData::STATE_RESTING: {
-    grip(false);
-    m_pcLEDs->SetAllColors(CColor::MAGENTA);
-    break;
-  }
-  case SStateData::STATE_EXPLORING: {
-    m_pcCamera->Enable();
-    grip(false);
+  case SStateData::STATE_EXPLORE: {
     m_pcLEDs->SetAllColors(CColor::GREEN);
     break;
   }
-  case SStateData::STATE_RETURN_TO_NEST: {
-    m_pcCamera->Enable();
+  case SStateData::STATE_PHOTOTAXIS: {
     m_pcLEDs->SetAllColors(CColor::BLUE);
     break;
   }
-  case SStateData::STATE_FLEE: {
-    m_pcCamera->Disable();
-    grip(false);
+  case SStateData::STATE_ANTIPHOTOTAXIS: {
     m_pcLEDs->SetAllColors(CColor::WHITE);
     break;
   }
@@ -381,18 +370,8 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
   }
 
   }
-  fleeCounter = 0;
+  m_sStateData.TicksInState = 0;
   m_sStateData.State = newState;
-}
-
-Real CFootBotConstruction::DistToNest() {
-  const CCI_FootBotLightSensor::TReadings &tLightReads = m_pcLight->GetReadings();
-  Real maxVal = 0;
-  for (auto tLightRead : tLightReads) {
-    if (maxVal < tLightRead.Value)
-      maxVal = tLightRead.Value;
-  }
-  return 1 - maxVal;
 }
 
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")

@@ -97,15 +97,19 @@ public:
    * Contains all the state information about the controller.
    */
   struct SStateData {
-    /* The three possible states in which the controller can be */
     enum EState {
-      STATE_RESTING = 0,
-      STATE_EXPLORING,
-      STATE_RETURN_TO_NEST,
-      STATE_FLEE,
+      STATE_PHOTOTAXIS = 0,
+      STATE_ANTIPHOTOTAXIS,
+      STATE_EXPLORE
     } State;
 
-    int TicksToFlee;
+    enum EAction {
+      NOACTION,
+      ACTION_PICKUP,
+      ACTION_DROP
+    } Action;
+
+    int TicksInState  = 0;
     SStateData();
     void Init(TConfigurationNode &t_node);
     void Reset();
@@ -146,36 +150,8 @@ public:
    */
   virtual void Destroy() {}
 
-  /*
-   * Returns true if the robot is currently exploring.
-   */
-  inline bool IsExploring() const {
-    return m_sStateData.State == SStateData::STATE_EXPLORING;
-  }
-
-  /*
-   * Returns true if the robot is currently resting.
-   */
-  inline bool IsResting() const {
-    return m_sStateData.State == SStateData::STATE_RESTING;
-  }
-
-  /*
-   * Returns true if the robot is currently returning to the nest.
-   */
-  inline bool IsReturningToNest() const {
-    return m_sStateData.State == SStateData::STATE_RETURN_TO_NEST;
-  }
 
 private:
-
-  /*
-   * Updates the state information.
-   * In pratice, it sets the SStateData::InNest flag.
-   * Future, more complex implementations should add their
-   * state update code here.
-   */
-  void UpdateState();
 
   /*
    * Calculates the vector to the light. Used to perform
@@ -204,19 +180,29 @@ private:
   void SetWheelSpeeds(const CVector2 &c_heading);
 
   /*
-   * Executes the resting state.
-   */
-  void Rest();
-
-  /*
    * Executes the exploring state.
    */
   void Explore();
 
   /*
-   * Executes the return to nest state.
+   * Executes phototaxis.
    */
-  void ReturnToNest();
+  void Phototaxis();
+
+  /*
+   * Executes antiphototaxis.
+   */
+  void AntiPhototaxis();
+
+  /*
+   * DropAction
+   */
+  bool DropAction();
+
+  /*
+   * Pickup the nearest Cylinder
+   */
+  bool PickUpAction();
 
 private:
 
@@ -248,29 +234,13 @@ private:
 
   bool GripperLocked = false;
 
-  int fleeCounter = 0;
-
   CVector2 RandomVector(int minDeg, int maxDeg);
-
-  bool HasItem();
 
   void SetState(SStateData::EState newState);
 
-  void grip(bool lock) {
-    GripperLocked = lock;
-    if(lock){
-      m_pcGripper->LockPositive();
-      m_pcTurret->SetPassiveMode();
-    } else {
-      m_pcGripper->Unlock();
-      m_pcTurret->SetPositionControlMode();
-      m_pcTurret->SetRotation(CRadians(0));
-    }
-  }
-
   Real DistToNest();
+  bool HasItem();
 
-  void Flee();
 };
 
 #endif
