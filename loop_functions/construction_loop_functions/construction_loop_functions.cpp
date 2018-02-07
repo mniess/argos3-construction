@@ -55,21 +55,22 @@ CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_p
 /****************************************/
 
 void CConstructionLoopFunctions::PreStep() {
+  /* Enable all Cylinders*/
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
   for (CSpace::TMapPerType::iterator it = tCMap.begin(); it != tCMap.end(); ++it) {
     /* Create a pointer to the current cylinder */
     CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it->second);
     pcC->GetLEDEquippedEntity().SetAllLEDsColors(CColor::PURPLE);
-
   }
 
+  /* Disable gripped Cylinders*/
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   /* Go through them */
   for (CSpace::TMapPerType::iterator it = tFBMap.begin(); it != tFBMap.end(); ++it) {
     /* Create a pointer to the current foot-bot */
     CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it->second);
     CGripperEquippedEntity &cGEE = pcFB->GetGripperEquippedEntity();
-    LOG << cGEE.GetDirection() << std::endl;
+
     if (cGEE.IsGripping()) {
       /* Get the gripped entity*/
       CEntity &cE = cGEE.GetGrippedEntity().GetRootEntity();
