@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.uni-luebeck.iti</groupId>
+        <artifactId>PopCode</artifactId>
+        <version>4.0.5-SNAPSHOT</version>
+    </parent>
+    <groupId>de.uni-luebeck.iti</groupId>
+    <artifactId>BuildingSim</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <build>
+        <defaultGoal>compile</defaultGoal>
+        <directory>${basedir}/build</directory>
+        <sourceDirectory>${basedir}</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.cmake-maven-project</groupId>
+                <artifactId>cmake-maven-plugin</artifactId>
+                <version>3.7.2-b1</version>
+                <executions>
+                    <execution>
+                        <id>cmake-generate</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <sourcePath>${basedir}</sourcePath><!-- The directory containing CMakeLists -->
+                            <targetPath>${project.build.directory}</targetPath><!-- The directory write the project files to -->
+                            <generator>Unix Makefiles</generator><!-- One of the generators defined at https://cmake.org/cmake/help/v3.7/manual/cmake-generators.7.html -->
+                            <classifier>linux-x86_64</classifier><!-- The classifier of the current platform. One of [windows-x86_32, windows-x86_64, linux-x86_32, linux-x86_64, linux-arm_32, mac-x86_64]. -->
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>cmake-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <projectDirectory>${project.build.directory}</projectDirectory><!-- "targetPath" from the "generate" goal -->
+                            <classifier>linux-x86_64</classifier><!-- The classifier of the current platform. One of [windows-x86_32, windows-x86_64, linux-x86_32, linux-x86_64, linux-arm_32, mac-x86_64]. -->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

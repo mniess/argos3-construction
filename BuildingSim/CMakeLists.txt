@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(argos3_examples)
+project(argos3_construction)
 
 if (APPLE)
     option(ASAN "Use Clang Address Sanitizer in Debug builds")
@@ -43,9 +43,6 @@ add_subdirectory(controllers)
 
 # Descend into the loop_functions directory
 add_subdirectory(loop_functions)
-
-# Descend into the lib directory
-add_subdirectory(lib)
 
 # Descend into the embedding directory
 add_subdirectory(embedding)
