@@ -18,11 +18,25 @@ CConstructionLoopFunctions::CConstructionLoopFunctions() {
 
 void CConstructionLoopFunctions::Init(TConfigurationNode &t_node) {
   TConfigurationNode& tConstruction = GetNode(t_node, "construction");
-  GetNodeAttribute(tConstruction, "buildingRadius", buildingRadius);
+  TConfigurationNode& tNSGA2 = GetNode(t_node, "nsga2");
+
+  GetNodeAttribute(tConstruction, "buildingRange", m_sConstructionParams.buildingRange);
+  GetNodeAttribute(tConstruction, "arenaX", m_sConstructionParams.arenaX);
+  GetNodeAttribute(tConstruction, "arenaY", m_sConstructionParams.arenaY);
+  GetNodeAttribute(tConstruction, "numRobots", m_sConstructionParams.numRobots);
 
   /* Create a new RNG */
-  //m_pcRNG = CRandom::CreateRNG("argos");
+  CRandom::CRNG *m_pcRNG = CRandom::CreateRNG("argos");
+  for (int i = 0; i < m_sConstructionParams.numRobots; ++i) {
+    std::string id = "fb" + ToString(i);
+    CVector3 pos = CVector3(m_pcRNG->Uniform(m_sConstructionParams.arenaX),m_pcRNG->Uniform(m_sConstructionParams.arenaY),0);
+    CQuaternion cq_orientation;
+    CRadians orientation = m_pcRNG->Uniform(CRadians::UNSIGNED_RANGE);
+    cq_orientation.FromEulerAngles(orientation,CRadians::ZERO,CRadians::ZERO);
 
+    CFootBotEntity* m_pcFootBot = new CFootBotEntity(id,"ffc",pos,cq_orientation);
+    AddEntity(*m_pcFootBot);
+  }
 }
 
 /****************************************/
@@ -45,8 +59,7 @@ void CConstructionLoopFunctions::PostExperiment(){
 /*************************************a***/
 
 CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_plane) {
-  float a = 0.25;
-  if(c_position_on_plane.Length() < buildingRadius+a && c_position_on_plane.Length() > buildingRadius-a)
+  if(m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(c_position_on_plane.Length()))
     return CColor::YELLOW;
   return CColor::WHITE;
 }
@@ -89,7 +102,6 @@ void CConstructionLoopFunctions::ConfigureFromGenome(){
 }
 
 Real CConstructionLoopFunctions::Performance() {
-  CRange<Real> vaildCylinderRange = CRange<Real>(buildingRadius-0.2,buildingRadius+0.2);
   std::list<CVector2> validCylinders;
   Real rayCastHit = 0;
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
@@ -103,7 +115,7 @@ Real CConstructionLoopFunctions::Performance() {
 
     pcC->GetEmbodiedEntity().GetOriginAnchor().Position.ProjectOntoXY(cylinderPos);
     LOG << pcC->GetContext();
-    if(vaildCylinderRange.WithinMinBoundIncludedMaxBoundIncluded(cylinderPos.Length())) {
+    if(m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(cylinderPos.Length())) {
       validCylinders.push_back(cylinderPos);
     }
   }

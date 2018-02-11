@@ -305,10 +305,6 @@ void CFootBotConstruction::Phototaxis() {
 }
 
 void CFootBotConstruction::AntiPhototaxis() {
-  LOG << GetId();
-  if(LightVector().Length() == 0) {
-    LOG << GetId() << "no light detected!" << std::endl;
-  }
   CVector2 cMove = DiffusionVector(nullptr) - LightVector().Normalize() + RandomVector();
   SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
 }

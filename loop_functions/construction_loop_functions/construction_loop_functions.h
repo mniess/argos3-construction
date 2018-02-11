@@ -12,6 +12,17 @@ class CConstructionLoopFunctions : public CLoopFunctions {
 
 public:
 
+  struct SConstructionParams {
+    CRange<Real> buildingRange;
+    int numRobots;
+    CRange<Real> arenaX;
+    CRange<Real> arenaY;
+  };
+
+  struct SNSGAIIParams {
+
+  };
+
   CConstructionLoopFunctions();
   virtual ~CConstructionLoopFunctions() {}
 
@@ -31,8 +42,9 @@ public:
   void ConfigureFromGenome();
 
 private:
+  SConstructionParams m_sConstructionParams;
+  SNSGAIIParams m_SNSGAIIParams;
 
-  Real buildingRadius;
   size_t m_unCurrentTrial;
 
 };
