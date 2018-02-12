@@ -4,17 +4,15 @@
 
 #include <de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode.h>
 
-JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_LaunchArgos(JNIEnv *, jobject){
-  return 4.2;
-}
+JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_LaunchArgos(JNIEnv *, jobject) {
 
-float LaunchARGoS() {
-  static argos::CSimulator& cSimulator = argos::CSimulator::GetInstance();
+  static argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
   /* Get a reference to the loop functions */
-  static CConstructionLoopFunctions& cLoopFunctions = dynamic_cast<CConstructionLoopFunctions&>(cSimulator.GetLoopFunctions());
+  static CConstructionLoopFunctions
+      &cLoopFunctions = dynamic_cast<CConstructionLoopFunctions &>(cSimulator.GetLoopFunctions());
 
   Real performance = 0.0f;
-  for(size_t i = 0; i < 3; ++i) {
+  for (size_t i = 0; i < 3; ++i) {
     cLoopFunctions.SetTrial(i);
 
     cSimulator.Reset();
@@ -26,16 +24,16 @@ float LaunchARGoS() {
   return -performance;
 }
 
-int InitARGoS() {
-
-  argos::CSimulator& cSimulator = argos::CSimulator::GetInstance();
-  cSimulator.SetExperimentFileName("experiments/construction.argos");
+JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_InitArgos(JNIEnv *, jobject) {
+  //printCurrentPath();
+  argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
+  cSimulator.SetExperimentFileName("experiments/construction-nsga2.argos");
   cSimulator.LoadExperiment();
   return 0;
 }
 
-int DestroyARGoS(){
-argos::CSimulator& cSimulator = argos::CSimulator::GetInstance();
-cSimulator.Destroy();
-return 0;
+JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_DestroyArgos(JNIEnv *, jobject) {
+  argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
+  cSimulator.Destroy();
+  return 0;
 }

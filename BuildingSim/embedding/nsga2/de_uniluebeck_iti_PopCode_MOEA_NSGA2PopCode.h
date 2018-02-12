@@ -15,6 +15,22 @@ extern "C" {
 JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_LaunchArgos
   (JNIEnv *, jobject);
 
+/*
+ * Class:     de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode
+ * Method:    InitArgos
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_InitArgos
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode
+ * Method:    DestroyArgos
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_DestroyArgos
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif
