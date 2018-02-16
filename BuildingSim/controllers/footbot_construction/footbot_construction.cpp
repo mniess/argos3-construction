@@ -1,4 +1,5 @@
 #include "footbot_construction.h"
+#include <argos3/core/simulator/physics_engine/physics_engine.h>
 
 /****************************************/
 CFootBotConstruction::SDiffusionParams::SDiffusionParams() :
@@ -38,6 +39,7 @@ CFootBotConstruction::SStateData::SStateData() = default;
 
 void CFootBotConstruction::SStateData::Init(TConfigurationNode &t_node) {
   //State will be set by SetState() function
+  Action = SStateData::NOACTION;
 }
 
 void CFootBotConstruction::SStateData::Reset() {
@@ -88,9 +90,7 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
 }
 
 void CFootBotConstruction::ControlStep() {
-
   if (m_sStateData.Action != SStateData::NOACTION) { //Actions have Priority
-
     bool success;
     switch (m_sStateData.Action) {
     case SStateData::ACTION_PICKUP: {
@@ -102,41 +102,47 @@ void CFootBotConstruction::ControlStep() {
       break;
     }
     default: {
-      LOGERR << "We can't be here, there's a bug!" << std::endl;
+      LOGERR << "Action not defined, there's a bug!" << std::endl;
     }
     }
 
-    if(success) {
+    if (success) {
       m_sStateData.Action = SStateData::NOACTION;
     }
 
   } else { // Perform Movement and check whether to switch
-
     m_sStateData.TicksInState++;
     switch (m_sStateData.State) {
     case SStateData::STATE_EXPLORE: {
       Explore();
-      if(false) {
+      if (WanderAntiPhototaxisRule.Switch(DistToNest(),
+                                          m_sStateData.TicksInState * CPhysicsEngine::GetInverseSimulationClockTick(),
+                                          seesCylinder())) {
         SetState(SStateData::STATE_PHOTOTAXIS);
       }
       break;
     }
     case SStateData::STATE_PHOTOTAXIS: {
       Phototaxis();
-      if(false) {
+      if (phototaxisWanderRule.Switch(DistToNest(),
+                                      m_sStateData.TicksInState * CPhysicsEngine::GetInverseSimulationClockTick(),
+                                      seesCylinder())) {
         SetState(SStateData::STATE_ANTIPHOTOTAXIS);
       }
       break;
     }
     case SStateData::STATE_ANTIPHOTOTAXIS: {
       AntiPhototaxis();
-      if(false) {
+      if (AntiPhototaxisPhototaxisRule.Switch(DistToNest(),
+                                              m_sStateData.TicksInState
+                                                  * CPhysicsEngine::GetInverseSimulationClockTick(),
+                                              seesCylinder())) {
         SetState(SStateData::STATE_EXPLORE);
       }
       break;
     }
     default: {
-      LOGERR << "We can't be here, there's a bug!" << std::endl;
+      LOGERR << "State not defined, there's a bug!" << std::endl;
     }
     }
   }
@@ -370,4 +376,21 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
   m_sStateData.State = newState;
 }
 
+void CFootBotConstruction::SetRules(int rules[8]) {
+  phototaxisWanderRule = SRule(rules[0], 0, INT_MIN, INT_MAX, rules[1]);
+  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], INT_MIN, INT_MAX, rules[4]);
+  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5], rules[6], rules[7]);
+}
+bool CFootBotConstruction::seesCylinder() {
+  return !m_pcCamera->GetReadings().BlobList.empty();
+}
+
+bool CFootBotConstruction::SRule::Switch(int light, int time, bool cylinder) {
+  bool timeRule = minTimeInState < time;
+  bool cylinderRule = cylinderInRange == 0 || cylinderInRange == cylinder;
+  bool lightRule = light < maxLight && light > minLight;
+  return timeRule && cylinderRule && lightRule;
+}
+
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")
+

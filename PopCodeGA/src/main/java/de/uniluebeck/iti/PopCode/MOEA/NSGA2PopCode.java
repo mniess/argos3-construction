@@ -1,6 +1,7 @@
 package de.uniluebeck.iti.PopCode.MOEA;
 
 import org.moeaframework.core.Solution;
+import org.moeaframework.core.Variable;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
@@ -16,22 +17,59 @@ public class NSGA2PopCode extends AbstractProblem {
         InitArgos();
     }
 
-    public native double LaunchArgos();
+    public native double LaunchArgos(int[] genome);
 
     public native int InitArgos();
 
     public native int DestroyArgos();
 
-    public void evaluate(Solution solution) {
-        double x = EncodingUtils.getReal(solution.getVariable(0));
-        solution.setObjective(0, LaunchArgos());
-        solution.setObjective(1, Math.pow(x - 2.0, 2.0));
+    private int run = 0;
+    public synchronized void  evaluate(Solution solution) {
+        int[] a = variablesToArray(solution);
+        solution.setObjective(0,LaunchArgos(a) );
+        System.out.println("Eval" + ++run);
+    }
+
+    private int[] variablesToArray(Solution solution) {
+        int[] array = new int[solution.getNumberOfVariables()];
+        for (int i = 0; i < solution.getNumberOfVariables(); i++) {
+            try{
+                array[i] = EncodingUtils.getInt(solution.getVariable(i));
+            } catch (Exception e) {
+                    System.err.println("Encoding Error!");
+                    e.printStackTrace();
+            }
+
+        }
+        return array;
     }
 
     public Solution newSolution() {
-        Solution solution = new Solution(1, 2);
-        solution.setVariable(0, EncodingUtils.newReal(-10.0, 10.0));
+        int numRobots = 10;
+        Solution solution = new Solution(numRobots*8, 1);
+        int counter = 0;
+        for (int i = 0; i < numRobots; i++) {
+            //AntiPhototaxis -> Explore
+            solution.setVariable(counter, EncodingUtils.newBinaryInt(0, 4)); //Time
+            solution.setVariable(counter+1, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
+            //Explore -> Phototaxis
+            solution.setVariable(counter+2, EncodingUtils.newBinaryInt(0, 4)); //Time
+            solution.setVariable(counter+3, EncodingUtils.newBinaryInt(-1, 1)); //Cylinder in Seen
+            solution.setVariable(counter+4, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
+            //Phototaxis->Antiphototaxis
+            solution.setVariable(counter+5, EncodingUtils.newBinaryInt(0, 4)); //LowerBound Light
+            solution.setVariable(counter+6, EncodingUtils.newBinaryInt(0, 4)); //UpperBound Light
+            solution.setVariable(counter+7, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
+            counter += 8;
+        }
         return solution;
+    }
+
+    private void TestJNI() {
+        InitArgos();
+//        LaunchArgos();
+//        LaunchArgos();
+        DestroyArgos();
     }
 
     @Override

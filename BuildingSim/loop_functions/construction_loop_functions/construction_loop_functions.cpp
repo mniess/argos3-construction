@@ -4,21 +4,21 @@
 #include <argos3/plugins/simulator/entities/cylinder_entity.h>
 
 #include <list>
-#include <algorithm>
+#include <vector>
+#include <controllers/footbot_construction/footbot_construction.h>
 
 /****************************************/
 /****************************************/
 
 CConstructionLoopFunctions::CConstructionLoopFunctions() {
-
 }
 
 /****************************************/
 /****************************************/
 
 void CConstructionLoopFunctions::Init(TConfigurationNode &t_node) {
-  TConfigurationNode& tConstruction = GetNode(t_node, "construction");
-  TConfigurationNode& tNSGA2 = GetNode(t_node, "nsga2");
+  TConfigurationNode &tConstruction = GetNode(t_node, "construction");
+  TConfigurationNode &tNSGA2 = GetNode(t_node, "nsga2");
 
   GetNodeAttribute(tConstruction, "buildingRange", m_sConstructionParams.buildingRange);
   GetNodeAttribute(tConstruction, "arenaX", m_sConstructionParams.arenaX);
@@ -26,15 +26,10 @@ void CConstructionLoopFunctions::Init(TConfigurationNode &t_node) {
   GetNodeAttribute(tConstruction, "numRobots", m_sConstructionParams.numRobots);
 
   /* Create a new RNG */
-  CRandom::CRNG *m_pcRNG = CRandom::CreateRNG("argos");
+  m_pcRNG = CRandom::CreateRNG("argos");
   for (int i = 0; i < m_sConstructionParams.numRobots; ++i) {
     std::string id = "fb" + ToString(i);
-    CVector3 pos = CVector3(m_pcRNG->Uniform(m_sConstructionParams.arenaX),m_pcRNG->Uniform(m_sConstructionParams.arenaY),0);
-    CQuaternion cq_orientation;
-    CRadians orientation = m_pcRNG->Uniform(CRadians::UNSIGNED_RANGE);
-    cq_orientation.FromEulerAngles(orientation,CRadians::ZERO,CRadians::ZERO);
-
-    CFootBotEntity* m_pcFootBot = new CFootBotEntity(id,"ffc",pos,cq_orientation);
+    CFootBotEntity *m_pcFootBot = new CFootBotEntity(id, "ffc");
     AddEntity(*m_pcFootBot);
   }
 }
@@ -43,6 +38,33 @@ void CConstructionLoopFunctions::Init(TConfigurationNode &t_node) {
 /****************************************/
 
 void CConstructionLoopFunctions::Reset() {
+  //New Positions for every Run
+/*  for (int i = 0; i < m_sConstructionParams.numRobots; ++i) {
+    std::string id = "fb" + ToString(i);
+
+    CFootBotEntity bot = dynamic_cast<CFootBotEntity&>(GetSpace().GetEntity(id));
+    SetRandomPos(bot.GetEmbodiedEntity());
+  }*/
+
+  CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
+  for (CSpace::TMapPerType::iterator it = tCMap.begin(); it != tCMap.end(); ++it) {
+    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it->second);
+    SetRandomPos(pcC->GetEmbodiedEntity());
+  }
+
+  CSpace::TMapPerType &tFMap = GetSpace().GetEntitiesByType("foot-bot");
+  for (CSpace::TMapPerType::iterator it = tFMap.begin(); it != tFMap.end(); ++it) {
+    CFootBotEntity *pcC = any_cast<CFootBotEntity *>(it->second);
+    SetRandomPos(pcC->GetEmbodiedEntity());
+  }
+}
+
+void CConstructionLoopFunctions::SetRandomPos(CEmbodiedEntity &e) {
+  CVector3 pos =
+      CVector3(m_pcRNG->Uniform(m_sConstructionParams.arenaX), m_pcRNG->Uniform(m_sConstructionParams.arenaY), 0);
+  CQuaternion cq_orientation;
+  cq_orientation.FromEulerAngles(m_pcRNG->Uniform(CRadians::UNSIGNED_RANGE), CRadians::ZERO, CRadians::ZERO);
+  MoveEntity(e, pos, cq_orientation, false);
 }
 
 /****************************************/
@@ -51,15 +73,14 @@ void CConstructionLoopFunctions::Reset() {
 void CConstructionLoopFunctions::Destroy() {
 }
 
-void CConstructionLoopFunctions::PostExperiment(){
-  Performance();
+void CConstructionLoopFunctions::PostExperiment() {
 }
 
 /****************************************/
 /*************************************a***/
 
 CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_plane) {
-  if(m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(c_position_on_plane.Length()))
+  if (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(c_position_on_plane.Length()))
     return CColor::YELLOW;
   return CColor::WHITE;
 }
@@ -75,7 +96,6 @@ void CConstructionLoopFunctions::PreStep() {
     CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it->second);
     pcC->GetLEDEquippedEntity().SetAllLEDsColors(CColor::PURPLE);
   }
-
   /* Disable gripped Cylinders*/
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   /* Go through them */
@@ -90,14 +110,28 @@ void CConstructionLoopFunctions::PreStep() {
 
       if ("cylinder" == cE.GetTypeDescription()) {
         /* cast to Cylinder*/
-        CCylinderEntity &cylinder = dynamic_cast<CCylinderEntity&>(cE);
+        CCylinderEntity &cylinder = dynamic_cast<CCylinderEntity &>(cE);
         cylinder.GetLEDEquippedEntity().SetAllLEDsColors(CColor::BLACK);
       }
     }
   }
 }
 
-void CConstructionLoopFunctions::ConfigureFromGenome(){
+void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length) {
+  CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
+  int singleGenomeLength = 8;
+  if (tFBMap.size() * singleGenomeLength == length) {
+    int i = 0;
+    for (auto const &it : tFBMap) {
+      /* Create a pointer to the current foot-bot */
+      CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it.second);
+      CFootBotConstruction
+          *currController = &dynamic_cast<CFootBotConstruction &>(pcFB->GetControllableEntity().GetController());
+      currController->SetRules(genome + (i++ * singleGenomeLength));
+    }
+  } else {
+    LOGERR << "Genome does not have correct length!" << std::endl;
+  }
 
 }
 
@@ -115,32 +149,31 @@ Real CConstructionLoopFunctions::Performance() {
 
     pcC->GetEmbodiedEntity().GetOriginAnchor().Position.ProjectOntoXY(cylinderPos);
     LOG << pcC->GetContext();
-    if(m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(cylinderPos.Length())) {
+    if (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(cylinderPos.Length())) {
       validCylinders.push_back(cylinderPos);
     }
   }
-  LOG << validCylinders.size() << " Cylinders in Range; " ;
+  LOG << validCylinders.size() << " Cylinders in Range; ";
   /*Do a raycast to every degree*/
   for (int i = 0; i < 360; ++i) {
     CRadians rayCastAngle = ToRadians(CDegrees(i));
-    CVector2 rayCast = CVector2(1,rayCastAngle);
+    CVector2 rayCast = CVector2(1, rayCastAngle);
     /* Check if any valid cylinder intersect the raycast*/
     for (CVector2 currCyl:validCylinders) {
       Real dot = currCyl.DotProduct(rayCast);
-      if(dot < 0) {
+      if (dot < 0) {
         continue;
       }
-      CVector2 nearesPoint = CVector2(dot,rayCastAngle);
-      Real distance = CVector2(nearesPoint.GetX()-currCyl.GetX(),nearesPoint.GetY()-currCyl.GetY()).Length();
-      if(distance < c_radius){
-        rayCastHit+=1;
+      CVector2 nearesPoint = CVector2(dot, rayCastAngle);
+      Real distance = CVector2(nearesPoint.GetX() - currCyl.GetX(), nearesPoint.GetY() - currCyl.GetY()).Length();
+      if (distance < c_radius) {
+        rayCastHit += 1;
         break;
       }
     }
   }
-  LOG << "Hits: " << rayCastHit<< " (" << rayCastHit/360 << ")"<<std::endl;
-  return rayCastHit/360.0;
-  return 0;
+  LOG << "Hits: " << rayCastHit << " (" << rayCastHit / 360 << ")" << std::endl;
+  return rayCastHit / 360.0;
 }
 
 /****************************************/

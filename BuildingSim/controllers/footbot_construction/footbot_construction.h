@@ -104,15 +104,27 @@ public:
     } State;
 
     enum EAction {
-      NOACTION,
+      NOACTION = 0,
       ACTION_PICKUP,
       ACTION_DROP
     } Action;
 
-    int TicksInState  = 0;
+    int TicksInState = 0;
     SStateData();
     void Init(TConfigurationNode &t_node);
     void Reset();
+  };
+
+  struct SRule {
+    int minTimeInState;
+    int cylinderInRange; //-1 must not be in Range, 1 must be in Range, 0 inactive
+    int minLight;
+    int maxLight;
+    int drop;
+    bool Switch(int light, int time, bool seesCylinder);
+    SRule() : minTimeInState(INT_MIN), cylinderInRange(0), minLight(INT_MIN), maxLight(INT_MAX), drop(1) {}
+    SRule(int minT, int cInR, int minL, int maxL, bool d)
+        : minTimeInState(minT), cylinderInRange(cInR), minLight(minL), maxLight(maxL), drop(d) {}
   };
 
 public:
@@ -150,7 +162,7 @@ public:
    */
   virtual void Destroy() {}
 
-
+  void SetRules(int rules[8]);
 private:
 
   /*
@@ -241,6 +253,11 @@ private:
   Real DistToNest();
   bool HasItem();
 
+  SRule phototaxisWanderRule;
+  SRule WanderAntiPhototaxisRule;
+  SRule AntiPhototaxisPhototaxisRule;
+
+  bool seesCylinder();
 };
 
 #endif

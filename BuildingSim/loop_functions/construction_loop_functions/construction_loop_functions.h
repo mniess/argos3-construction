@@ -19,10 +19,6 @@ public:
     CRange<Real> arenaY;
   };
 
-  struct SNSGAIIParams {
-
-  };
-
   CConstructionLoopFunctions();
   virtual ~CConstructionLoopFunctions() {}
 
@@ -39,14 +35,16 @@ public:
   }
 
   /* Configures the robot controller from the genome */
-  void ConfigureFromGenome();
+  void ConfigureFromGenome(int genome[], int length);
 
 private:
   SConstructionParams m_sConstructionParams;
-  SNSGAIIParams m_SNSGAIIParams;
 
   size_t m_unCurrentTrial;
 
+  CRandom::CRNG *m_pcRNG;
+
+  void SetRandomPos(CEmbodiedEntity &e);
 };
 
 #endif
