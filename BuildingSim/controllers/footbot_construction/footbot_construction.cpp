@@ -115,7 +115,7 @@ void CFootBotConstruction::ControlStep() {
     switch (m_sStateData.State) {
     case SStateData::STATE_EXPLORE: {
       Explore();
-      if (WanderAntiPhototaxisRule.Switch(DistToNest(),
+      if (WanderAntiPhototaxisRule.Switch(LightIntensity(),
                                           m_sStateData.TicksInState * CPhysicsEngine::GetInverseSimulationClockTick(),
                                           seesCylinder())) {
         SetState(SStateData::STATE_PHOTOTAXIS);
@@ -124,7 +124,7 @@ void CFootBotConstruction::ControlStep() {
     }
     case SStateData::STATE_PHOTOTAXIS: {
       Phototaxis();
-      if (phototaxisWanderRule.Switch(DistToNest(),
+      if (phototaxisWanderRule.Switch(LightIntensity(),
                                       m_sStateData.TicksInState * CPhysicsEngine::GetInverseSimulationClockTick(),
                                       seesCylinder())) {
         SetState(SStateData::STATE_ANTIPHOTOTAXIS);
@@ -133,7 +133,7 @@ void CFootBotConstruction::ControlStep() {
     }
     case SStateData::STATE_ANTIPHOTOTAXIS: {
       AntiPhototaxis();
-      if (AntiPhototaxisPhototaxisRule.Switch(DistToNest(),
+      if (AntiPhototaxisPhototaxisRule.Switch(LightIntensity(),
                                               m_sStateData.TicksInState
                                                   * CPhysicsEngine::GetInverseSimulationClockTick(),
                                               seesCylinder())) {
@@ -222,14 +222,14 @@ bool CFootBotConstruction::HasItem() {
   return (GripperLocked && LedVector(CColor::PURPLE).Length() < 12);
 }
 
-Real CFootBotConstruction::DistToNest() {
+Real CFootBotConstruction::LightIntensity() {
   const CCI_FootBotLightSensor::TReadings &tLightReads = m_pcLight->GetReadings();
   Real maxVal = 0;
   for (auto tLightRead : tLightReads) {
     if (maxVal < tLightRead.Value)
       maxVal = tLightRead.Value;
   }
-  return 1 - maxVal;
+  return maxVal;
 }
 
 void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
@@ -377,9 +377,10 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
 }
 
 void CFootBotConstruction::SetRules(int rules[8]) {
-  phototaxisWanderRule = SRule(rules[0], 0, INT_MIN, INT_MAX, rules[1]==1);
-  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], INT_MIN, INT_MAX, rules[4]==1);
-  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5], rules[6], rules[7]==1);
+  int maxLight = 4; // maxvalue allowed in gene
+  phototaxisWanderRule = SRule(rules[0], 0, -1, maxLight, rules[1]==1);
+  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], -1, maxLight, rules[4]==1);
+  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5]/maxLight, rules[6]/maxLight, rules[7]==1);
 }
 bool CFootBotConstruction::seesCylinder() {
   return !m_pcCamera->GetReadings().BlobList.empty();

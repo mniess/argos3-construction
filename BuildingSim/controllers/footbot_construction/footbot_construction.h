@@ -250,7 +250,7 @@ private:
 
   void SetState(SStateData::EState newState);
 
-  Real DistToNest();
+  Real LightIntensity();
   bool HasItem();
 
   SRule phototaxisWanderRule;
