@@ -101,13 +101,13 @@ public:
       STATE_PHOTOTAXIS = 0,
       STATE_ANTIPHOTOTAXIS,
       STATE_EXPLORE
-    } State;
+    } State = STATE_EXPLORE;
 
     enum EAction {
       NOACTION = 0,
       ACTION_PICKUP,
       ACTION_DROP
-    } Action;
+    } Action = NOACTION;
 
     int TicksInState = 0;
     SStateData();
@@ -121,7 +121,7 @@ public:
     int minLight;
     int maxLight;
     int drop;
-    bool Switch(int light, int time, bool seesCylinder);
+    bool Switch(Real light, Real time, bool seesCylinder);
     SRule() : minTimeInState(INT_MIN), cylinderInRange(0), minLight(INT_MIN), maxLight(INT_MAX), drop(1) {}
     SRule(int minT, int cInR, int minL, int maxL, bool d)
         : minTimeInState(minT), cylinderInRange(cInR), minLight(minL), maxLight(maxL), drop(d) {}

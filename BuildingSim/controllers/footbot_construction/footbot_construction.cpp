@@ -91,7 +91,7 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
 
 void CFootBotConstruction::ControlStep() {
   if (m_sStateData.Action != SStateData::NOACTION) { //Actions have Priority
-    bool success;
+    bool success = false;
     switch (m_sStateData.Action) {
     case SStateData::ACTION_PICKUP: {
       success = PickUpAction();
@@ -377,15 +377,15 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
 }
 
 void CFootBotConstruction::SetRules(int rules[8]) {
-  phototaxisWanderRule = SRule(rules[0], 0, INT_MIN, INT_MAX, rules[1]);
-  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], INT_MIN, INT_MAX, rules[4]);
-  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5], rules[6], rules[7]);
+  phototaxisWanderRule = SRule(rules[0], 0, INT_MIN, INT_MAX, rules[1]==1);
+  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], INT_MIN, INT_MAX, rules[4]==1);
+  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5], rules[6], rules[7]==1);
 }
 bool CFootBotConstruction::seesCylinder() {
   return !m_pcCamera->GetReadings().BlobList.empty();
 }
 
-bool CFootBotConstruction::SRule::Switch(int light, int time, bool cylinder) {
+bool CFootBotConstruction::SRule::Switch(Real light, Real time, bool cylinder) {
   bool timeRule = minTimeInState < time;
   bool cylinderRule = cylinderInRange == 0 || cylinderInRange == cylinder;
   bool lightRule = light < maxLight && light > minLight;

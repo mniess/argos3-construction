@@ -4,14 +4,12 @@
 #include <argos3/plugins/simulator/entities/cylinder_entity.h>
 
 #include <list>
-#include <vector>
 #include <controllers/footbot_construction/footbot_construction.h>
 
 /****************************************/
 /****************************************/
 
-CConstructionLoopFunctions::CConstructionLoopFunctions() {
-}
+CConstructionLoopFunctions::CConstructionLoopFunctions() = default;
 
 /****************************************/
 /****************************************/
@@ -47,14 +45,14 @@ void CConstructionLoopFunctions::Reset() {
   }*/
 
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
-  for (CSpace::TMapPerType::iterator it = tCMap.begin(); it != tCMap.end(); ++it) {
-    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it->second);
+  for (auto &it : tCMap) {
+    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it.second);
     SetRandomPos(pcC->GetEmbodiedEntity());
   }
 
   CSpace::TMapPerType &tFMap = GetSpace().GetEntitiesByType("foot-bot");
-  for (CSpace::TMapPerType::iterator it = tFMap.begin(); it != tFMap.end(); ++it) {
-    CFootBotEntity *pcC = any_cast<CFootBotEntity *>(it->second);
+  for (auto &it : tFMap) {
+    CFootBotEntity *pcC = any_cast<CFootBotEntity *>(it.second);
     SetRandomPos(pcC->GetEmbodiedEntity());
   }
 }
@@ -91,17 +89,17 @@ CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_p
 void CConstructionLoopFunctions::PreStep() {
   /* Enable all Cylinders*/
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
-  for (CSpace::TMapPerType::iterator it = tCMap.begin(); it != tCMap.end(); ++it) {
+  for (auto &it : tCMap) {
     /* Create a pointer to the current cylinder */
-    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it->second);
+    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it.second);
     pcC->GetLEDEquippedEntity().SetAllLEDsColors(CColor::PURPLE);
   }
   /* Disable gripped Cylinders*/
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   /* Go through them */
-  for (CSpace::TMapPerType::iterator it = tFBMap.begin(); it != tFBMap.end(); ++it) {
+  for (auto &it : tFBMap) {
     /* Create a pointer to the current foot-bot */
-    CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it->second);
+    CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it.second);
     CGripperEquippedEntity &cGEE = pcFB->GetGripperEquippedEntity();
 
     if (cGEE.IsGripping()) {
@@ -141,9 +139,9 @@ Real CConstructionLoopFunctions::Performance() {
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
   Real c_radius = any_cast<CCylinderEntity *>(tCMap.begin()->second)->GetRadius();
   /*find valid cylinders*/
-  for (CSpace::TMapPerType::iterator it = tCMap.begin(); it != tCMap.end(); ++it) {
+  for (auto &it : tCMap) {
     /* Create a pointer to the current cylinder */
-    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it->second);
+    CCylinderEntity *pcC = any_cast<CCylinderEntity *>(it.second);
     /*get position of cylinder*/
     CVector2 cylinderPos;
 
