@@ -121,7 +121,7 @@ public:
     int minLight;
     int maxLight;
     int drop;
-    bool Switch(Real light, Real time, bool seesCylinder);
+    bool Switch(Real light, int ticks, bool seesCylinder);
     SRule() : minTimeInState(INT_MIN), cylinderInRange(0), minLight(INT_MIN), maxLight(INT_MAX), drop(1) {}
     SRule(int minT, int cInR, int minL, int maxL, bool d)
         : minTimeInState(minT), cylinderInRange(cInR), minLight(minL), maxLight(maxL), drop(d) {}

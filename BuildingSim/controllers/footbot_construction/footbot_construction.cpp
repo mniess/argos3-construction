@@ -46,6 +46,15 @@ void CFootBotConstruction::SStateData::Reset() {
   //State will be set by SetState() function
 }
 
+bool CFootBotConstruction::SRule::Switch(Real light, int ticks, bool seesCylinder) {
+  bool timeRule = minTimeInState < ticks * CPhysicsEngine::GetInverseSimulationClockTick();;
+  bool cylinderRule = cylinderInRange == 0
+      || cylinderInRange == seesCylinder; // 0: indifferent, -1 must not see cylinder, 1 must see cylinder
+  bool lightRule = light < maxLight && light > minLight;
+  return timeRule && cylinderRule && lightRule;
+}
+
+/****************************************/
 /****************************************/
 
 CFootBotConstruction::CFootBotConstruction() :
@@ -115,28 +124,21 @@ void CFootBotConstruction::ControlStep() {
     switch (m_sStateData.State) {
     case SStateData::STATE_EXPLORE: {
       Explore();
-      if (WanderAntiPhototaxisRule.Switch(LightIntensity(),
-                                          m_sStateData.TicksInState * CPhysicsEngine::GetInverseSimulationClockTick(),
-                                          seesCylinder())) {
+      if (WanderAntiPhototaxisRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
         SetState(SStateData::STATE_PHOTOTAXIS);
       }
       break;
     }
     case SStateData::STATE_PHOTOTAXIS: {
       Phototaxis();
-      if (phototaxisWanderRule.Switch(LightIntensity(),
-                                      m_sStateData.TicksInState * CPhysicsEngine::GetInverseSimulationClockTick(),
-                                      seesCylinder())) {
+      if (phototaxisWanderRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
         SetState(SStateData::STATE_ANTIPHOTOTAXIS);
       }
       break;
     }
     case SStateData::STATE_ANTIPHOTOTAXIS: {
       AntiPhototaxis();
-      if (AntiPhototaxisPhototaxisRule.Switch(LightIntensity(),
-                                              m_sStateData.TicksInState
-                                                  * CPhysicsEngine::GetInverseSimulationClockTick(),
-                                              seesCylinder())) {
+      if (AntiPhototaxisPhototaxisRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
         SetState(SStateData::STATE_EXPLORE);
       }
       break;
@@ -378,19 +380,12 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
 
 void CFootBotConstruction::SetRules(int rules[8]) {
   int maxLight = 4; // maxvalue allowed in gene
-  phototaxisWanderRule = SRule(rules[0], 0, -1, maxLight, rules[1]==1);
-  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], -1, maxLight, rules[4]==1);
-  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5]/maxLight, rules[6]/maxLight, rules[7]==1);
+  phototaxisWanderRule = SRule(rules[0], 0, -1, maxLight, rules[1] == 1);
+  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], -1, maxLight, rules[4] == 1);
+  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5] / maxLight, rules[6] / maxLight, rules[7] == 1);
 }
 bool CFootBotConstruction::seesCylinder() {
   return !m_pcCamera->GetReadings().BlobList.empty();
-}
-
-bool CFootBotConstruction::SRule::Switch(Real light, Real time, bool cylinder) {
-  bool timeRule = minTimeInState < time;
-  bool cylinderRule = cylinderInRange == 0 || cylinderInRange == cylinder;
-  bool lightRule = light < maxLight && light > minLight;
-  return timeRule && cylinderRule && lightRule;
 }
 
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")
