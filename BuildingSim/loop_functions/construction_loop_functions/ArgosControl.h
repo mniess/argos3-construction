@@ -16,7 +16,6 @@ public:
 
 private:
   double Evaluate();
-
 };
 
 #endif //ARGOS3_CONSTRUCTION_ARGOSCONTROL_H

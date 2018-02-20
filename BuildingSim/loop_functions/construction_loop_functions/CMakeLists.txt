@@ -1,3 +1,7 @@
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 link_directories(${CMAKE_BINARY_DIR}/controllers/construction_construction)
 set(construction_loop_functions_SOURCES
         ArgosControl.cpp
@@ -17,7 +21,8 @@ target_link_libraries(construction_loop_functions
         argos3plugin_simulator_entities
         argos3plugin_simulator_footbot
         argos3plugin_simulator_genericrobot
-        argos3plugin_simulator_media)
+        argos3plugin_simulator_media
+        Threads::Threads)
 
 add_executable(argosControl ArgosControl.cpp)
 target_link_libraries(argosControl
@@ -28,7 +33,8 @@ target_link_libraries(argosControl
         argos3plugin_simulator_entities
         argos3plugin_simulator_footbot
         argos3plugin_simulator_genericrobot
-        argos3plugin_simulator_media)
+        argos3plugin_simulator_media
+        Threads::Threads)
 
 if (ARGOS_COMPILE_QTOPENGL)
     target_link_libraries(argosControl argos3plugin_simulator_qtopengl)

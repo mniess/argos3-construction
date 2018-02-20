@@ -24,7 +24,20 @@ set(CMAKE_MODULE_PATH $ENV{CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 # Find the ARGoS package, make sure to save the ARGoS prefix
 find_package(PkgConfig)
 pkg_check_modules(ARGOS REQUIRED argos3_simulator)
+#SET(ARGOS_PREFIX /home/michi/git/argos3-ilpincy)
+#SET(ARGOS_PREFIX /usr)
+#SET(ARGOS_LIBRARY_DIRS
+#        ${ARGOS_PREFIX}/build/core
+#        ${ARGOS_PREFIX}/build/plugins/robots/foot-bot
+#        ${ARGOS_PREFIX}/build/plugins/robots/generic
+#        ${ARGOS_PREFIX}/build/plugins/simulator/physics_engines/dynamics2d
+#        ${ARGOS_PREFIX}/build/plugins/simulator/entities
+#        ${ARGOS_PREFIX}/build/plugins/simulator/media
+#        ${ARGOS_PREFIX}/build/plugins/simulator/visualizations/qt-opengl
+#        )
+message(STATUS "ArgosPrefix: ${ARGOS_PREFIX} libdir: ${ARGOS_LIBRARY_DIRS} include: ${ARGOS_INCLUDE_DIRS}")
 set(ARGOS_PREFIX ${ARGOS_PREFIX} CACHE INTERNAL "")
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} /home/michi/git/argos3-ilpincy/src/cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ARGOS_PREFIX}/share/argos3/cmake)
 
 # Check whether all the necessary libs have been installed to compile the
