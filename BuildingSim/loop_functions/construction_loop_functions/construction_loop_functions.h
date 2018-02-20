@@ -28,7 +28,7 @@ public:
   virtual void PostExperiment();
   virtual CColor GetFloorColor(const CVector2 &c_position_on_plane);
   virtual void PreStep();
-  Real Performance();
+  float Performance();
 
   inline void SetTrial(size_t un_trial) {
     m_unCurrentTrial = un_trial;

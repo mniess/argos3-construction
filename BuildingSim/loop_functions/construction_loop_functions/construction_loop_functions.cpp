@@ -133,7 +133,7 @@ void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length) {
 
 }
 
-Real CConstructionLoopFunctions::Performance() {
+float CConstructionLoopFunctions::Performance() {
   std::list<CVector2> validCylinders;
   Real rayCastHit = 0;
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");

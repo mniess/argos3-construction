@@ -5,6 +5,7 @@
 #include <argos3/core/simulator/loop_functions.h>
 #include <loop_functions/construction_loop_functions/construction_loop_functions.h>
 #include <wait.h>
+#include <thread>
 
 #include "ArgosControl.h"
 
@@ -26,7 +27,7 @@ void ArgosControl::InitArgos() {
 }
 
 double ArgosControl::LaunchArgos(int genome[], int length) {
-
+    int trials = 3;
 //  std::ofstream cLOGFile(std::string("ARGoS_LOG_" + ToString(::getpid())).c_str(), std::ios::out);
 //  //std::ofstream cLOGFile(std::string("/dev/null").c_str(), std::ios::out);
 //  LOG.DisableColoredOutput();
@@ -50,26 +51,45 @@ double ArgosControl::LaunchArgos(int genome[], int length) {
 
   cLoopFunctions.ConfigureFromGenome(genome, length);
   Real performance = 0.0f;
-  for (size_t i = 0; i < 1; ++i) {
-    cLoopFunctions.SetTrial(i);
+  for (size_t i = 0; i < trials; ++i) {
 
-    cSimulator.Reset(i);
-
-    cSimulator.Execute();
-    performance = Max(performance, cLoopFunctions.Performance());
+    threads.push_back(std::thread(&ArgosControl::Evaluate, this, i));
+    //Evaluate(i);
     //LOG.Flush();
     //LOGERR.Flush();
   }
+
+  for(auto& t : threads) {
+    t.join();
+  }
+
   //cSimulator.Destroy();
 
-  return performance;
+  return fitness.load();
 }
 
-double threadedArgos( int* genome, int length, double *result) {
+double ArgosControl::Evaluate(int trial) {
+  argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
+  CConstructionLoopFunctions
+      &cLoopFunctions = dynamic_cast<CConstructionLoopFunctions &>(cSimulator.GetLoopFunctions());
+
+  cLoopFunctions.SetTrial(trial);
+
+  cSimulator.Reset(trial);
+
+  cSimulator.Execute();
+
+  float performance = cLoopFunctions.Performance();
+  if(fitness < performance) {
+    fitness = performance;
+  }
+}
+
+double threadedArgos(int *genome, int length, double *result) {
   pid_t pid = ::fork();
-  std::cout << pid <<  std::endl;
-  if(pid == 0) {
-    ArgosControl& c = ArgosControl::GetInstance();
+  std::cout << pid << std::endl;
+  if (pid == 0) {
+    ArgosControl &c = ArgosControl::GetInstance();
     *result = 1; //c.LaunchArgos(genome, length);
     std::cout.flush();
     //::sleep(3);
@@ -77,19 +97,19 @@ double threadedArgos( int* genome, int length, double *result) {
     std::cout.flush();
     return 1;
     //threadedArgos(c,genome,80,res);
-  }else {
+  } else {
     int nSlaveInfo;
     pid_t tSlavePID;
-    ::waitpid(0,&nSlaveInfo, WUNTRACED);
+    ::waitpid(0, &nSlaveInfo, WUNTRACED);
   }
 }
 
 void ArgosControl::DestroyArgos() {
   argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
- cSimulator.Destroy();
+  cSimulator.Destroy();
 }
 
-void test(ArgosControl& c, double& i){
+void test(ArgosControl &c, double &i) {
   std::cout << "test" << i++ << std::endl;
 }
 
@@ -110,8 +130,8 @@ int main(int argc, const char *argv[]) {
                     4, 0, 0, 1, 0, 3, 3, 1,
                     0, 0, 1, 1, 0, 3, 3, 1};
   c.InitArgos();
-  res = c.LaunchArgos(genome,80);
-  res = c.LaunchArgos(genome,80);
+  res = c.LaunchArgos(genome, 80);
+  res = c.LaunchArgos(genome, 80);
   c.DestroyArgos();
 
 

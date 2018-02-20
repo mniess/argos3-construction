@@ -1,6 +1,8 @@
 #ifndef ARGOS3_CONSTRUCTION_ARGOSCONTROL_H
 #define ARGOS3_CONSTRUCTION_ARGOSCONTROL_H
 
+#include <atomic>
+
 class ArgosControl {
 private:
   ArgosControl() = default;
@@ -15,7 +17,9 @@ public:
   void DestroyArgos();
 
 private:
-  double Evaluate();
+  double Evaluate(int trial);
+  std::vector<std::thread> threads;
+  std::atomic<float> fitness;
 };
 
 #endif //ARGOS3_CONSTRUCTION_ARGOSCONTROL_H
