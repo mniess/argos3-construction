@@ -39,15 +39,17 @@ CFootBotConstruction::SStateData::SStateData() = default;
 
 void CFootBotConstruction::SStateData::Init(TConfigurationNode &t_node) {
   //State will be set by SetState() function
-  Action = SStateData::NOACTION;
+  Reset();
 }
 
 void CFootBotConstruction::SStateData::Reset() {
+  Action = SStateData::NOACTION;
+  State = SStateData::STATE_EXPLORE;
   //State will be set by SetState() function
 }
 
 bool CFootBotConstruction::SRule::Switch(Real light, int ticks, bool seesCylinder) {
-  bool timeRule = minTimeInState < ticks * CPhysicsEngine::GetInverseSimulationClockTick();;
+  bool timeRule = minTicksInState < ticks;
   bool cylinderRule = cylinderInRange == 0
       || cylinderInRange == seesCylinder; // 0: indifferent, -1 must not see cylinder, 1 must see cylinder
   bool lightRule = light < maxLight && light > minLight;
@@ -92,10 +94,22 @@ void CFootBotConstruction::Init(TConfigurationNode &t_node) {
   /* Create a random number generator. We use the 'argos' category so
      that creation, reset, seeding and cleanup are managed by ARGoS. */
   m_pcRNG = CRandom::CreateRNG("argos");
-  m_pcCamera->Enable();
-  m_pcTurret->SetPassiveMode();
 
-  SetState(SStateData::STATE_ANTIPHOTOTAXIS);
+  Reset();
+}
+
+void CFootBotConstruction::Reset() {
+  m_sStateData.Reset();
+
+  m_pcLEDs->SetAllColors(CColor::WHITE);
+
+  GripperLocked = false;
+  m_pcGripper->Unlock();
+
+  m_pcCamera->Enable();
+
+  m_pcTurret->SetPositionControlMode();
+  m_pcTurret->SetRotation(CRadians::ZERO);
 }
 
 void CFootBotConstruction::ControlStep() {
@@ -124,22 +138,25 @@ void CFootBotConstruction::ControlStep() {
     switch (m_sStateData.State) {
     case SStateData::STATE_EXPLORE: {
       Explore();
-      if (WanderAntiPhototaxisRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
+      if (ExplorePhototaxisRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
         SetState(SStateData::STATE_PHOTOTAXIS);
+        m_sStateData.Action = ExplorePhototaxisRule.drop ? SStateData::ACTION_DROP : SStateData::ACTION_PICKUP;
       }
       break;
     }
     case SStateData::STATE_PHOTOTAXIS: {
       Phototaxis();
-      if (phototaxisWanderRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
+      if (PhototaxisAntiphototaxisRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
         SetState(SStateData::STATE_ANTIPHOTOTAXIS);
+        m_sStateData.Action = PhototaxisAntiphototaxisRule.drop ? SStateData::ACTION_DROP : SStateData::ACTION_PICKUP;
       }
       break;
     }
     case SStateData::STATE_ANTIPHOTOTAXIS: {
       AntiPhototaxis();
-      if (AntiPhototaxisPhototaxisRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
+      if (AntiPhototaxisExploreRule.Switch(LightIntensity(), m_sStateData.TicksInState, seesCylinder())) {
         SetState(SStateData::STATE_EXPLORE);
+        m_sStateData.Action = AntiPhototaxisExploreRule.drop ? SStateData::ACTION_DROP : SStateData::ACTION_PICKUP;
       }
       break;
     }
@@ -150,15 +167,14 @@ void CFootBotConstruction::ControlStep() {
   }
 }
 
-void CFootBotConstruction::Reset() {
-  SetState(SStateData::STATE_ANTIPHOTOTAXIS);
-}
-
 /****************************************/
 
 CVector2 CFootBotConstruction::LightVector() {
   /* Get readings from light sensor */
   const CCI_FootBotLightSensor::TReadings &tLightReads = m_pcLight->GetReadings();
+  if (tLightReads.empty()) {
+    return CVector2(); //return zero vector
+  }
   /* Sum them together */
   CVector2 cAccumulator;
   Real maxVal = 0;
@@ -167,7 +183,7 @@ CVector2 CFootBotConstruction::LightVector() {
     if (maxVal < tLightRead.Value)
       maxVal = tLightRead.Value;
   }
-  return cAccumulator.Length() > 0.0f ? CVector2(maxVal, cAccumulator.Angle()) : CVector2();
+  return CVector2(maxVal, cAccumulator.Angle());
 }
 
 CVector2 CFootBotConstruction::DiffusionVector(bool *b_collision) {
@@ -203,7 +219,7 @@ CVector2 CFootBotConstruction::LedVector(CColor color) const {
   for (auto &blob : camReadings.BlobList) {
     if (blob->Color == color) {
       CVector2 blobV(blob->Distance, blob->Angle);
-      if (blobV.Length() < ledV.Length() || ledV.Length() == 0) {
+      if (blobV.Length() + 1 < ledV.Length() || ledV.Length() == 0) {
         ledV = blobV;
       }
     }
@@ -221,7 +237,11 @@ CVector2 CFootBotConstruction::RandomVector(int minDeg = 0, int maxDeg = 360) {
 /****************************************/
 
 bool CFootBotConstruction::HasItem() {
-  return (GripperLocked && LedVector(CColor::PURPLE).Length() < 12);
+  return GripperLocked;// && LedVector(CColor::PURPLE).Length() < 12;
+}
+
+bool CFootBotConstruction::seesCylinder() {
+  return !m_pcCamera->GetReadings().BlobList.empty();
 }
 
 Real CFootBotConstruction::LightIntensity() {
@@ -303,18 +323,51 @@ void CFootBotConstruction::SetWheelSpeeds(const CVector2 &c_heading) {
 /****************************************/
 
 void CFootBotConstruction::Explore() {
-  CVector2 cMove = DiffusionVector(nullptr) + RandomVector();
-  SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+  int straightwalkTime = 2; // in seconds
+  bool collission;
+
+  randomWalkCounter++;
+
+  if (randomWalkCounter >= CPhysicsEngine::GetInverseSimulationClockTick() * straightwalkTime) {
+    currMoveV = RandomVector(-45, 45);
+    randomWalkCounter = 0;
+  }
+  CVector2 cDiff = DiffusionVector(&collission);
+  if (collission && !HasItem()) {
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cDiff);
+  } else {
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * currMoveV.Normalize());
+  }
 }
 
 void CFootBotConstruction::Phototaxis() {
-  CVector2 cMove = DiffusionVector(nullptr) + LightVector().Normalize() * 2 + RandomVector();
-  SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+  bool collision;
+
+  CVector2 cDiff = DiffusionVector(&collision);
+  CVector2 lightV = LightVector();
+
+  if (lightV.SquareLength() == 0) {
+    Explore();
+  } else if (collision && !HasItem()) {
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cDiff);
+  } else {
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * (lightV.Normalize() + 0.5 * RandomVector(-45, 0)));
+  }
 }
 
 void CFootBotConstruction::AntiPhototaxis() {
-  CVector2 cMove = DiffusionVector(nullptr) - LightVector().Normalize() + RandomVector();
-  SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cMove.Normalize());
+  bool collision;
+
+  CVector2 cDiff = DiffusionVector(&collision);
+  CVector2 lightV = LightVector();
+
+  if (lightV.SquareLength() == 0) {
+    Explore();
+  } else if (collision && !HasItem()) {
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cDiff);
+  } else {
+    SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * -lightV.Normalize());
+  }
 }
 
 /****************************************/
@@ -323,25 +376,37 @@ bool CFootBotConstruction::DropAction() {
   GripperLocked = false;
   m_pcGripper->Unlock();
   m_pcTurret->SetPositionControlMode();
-  m_pcTurret->SetRotation(CRadians(0));
+  m_pcTurret->SetRotation(CRadians::ZERO);
   return true;
 }
 
 bool CFootBotConstruction::PickUpAction() {
+  if (HasItem()) { //Do not attempt to pickup another cylinder
+    return true;
+  }
   CVector2 cCCyl = LedVector(CColor().PURPLE);
 
   if (cCCyl.Length() != 0) { // Cylinder detected
-    if (cCCyl.Length() < 9.5) { // Cylinder is within reach, grip it!
-      if (cCCyl.Angle() < ToRadians(CDegrees(2)) && cCCyl.Angle() > ToRadians(CDegrees(-2))) {
+    if (cCCyl.Length() < 11) { // Cylinder is within reach, grip it!
+      if (cCCyl.Angle() < ToRadians(CDegrees(1)) && cCCyl.Angle() > ToRadians(CDegrees(-1))) {
+//        if(m_pcTurretEnc->GetRotation() != CRadians(0)) {
+//          LOG<< GetId() << " Gripper not ready yet is: " << m_pcTurretEnc->GetRotation() << std::endl;
+//          m_pcTurret->SetPositionControlMode();
+//          m_pcTurret->SetRotation(CRadians(0));
+//          m_pcWheels->SetLinearVelocity(0, 0);
+//          return false;
+//        }
         GripperLocked = true;
         m_pcGripper->LockPositive();
         m_pcTurret->SetPassiveMode();
         return true;
       } else {
-        int rotDir = cCCyl.Angle() < CRadians(0) ? 1 : -1;
-
+        int rotDir = cCCyl.Angle() < CRadians::ZERO ? 1 : -1;
         m_pcWheels->SetLinearVelocity(rotDir, -rotDir);
-        m_pcLEDs->SetAllColors(CColor::ORANGE);
+        //m_pcLEDs->SetAllColors(CColor::ORANGE);
+        m_pcLEDs->SetSingleColor(2, CColor::CYAN);
+        m_pcLEDs->SetSingleColor(6, CColor::CYAN);
+        m_pcLEDs->SetSingleColor(11, CColor::CYAN);
       }
     } else { //move towards cylinder
       SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cCCyl.Normalize());
@@ -358,34 +423,45 @@ bool CFootBotConstruction::PickUpAction() {
 void CFootBotConstruction::SetState(SStateData::EState newState) {
   switch (newState) {
   case SStateData::STATE_EXPLORE: {
-    m_pcLEDs->SetAllColors(CColor::GREEN);
+    m_pcLEDs->SetAllColors(CColor::WHITE);
     break;
   }
   case SStateData::STATE_PHOTOTAXIS: {
-    m_pcLEDs->SetAllColors(CColor::BLUE);
+    m_pcLEDs->SetAllColors(CColor::GREEN);
     break;
   }
   case SStateData::STATE_ANTIPHOTOTAXIS: {
-    m_pcLEDs->SetAllColors(CColor::WHITE);
+    m_pcLEDs->SetAllColors(CColor::BLUE);
     break;
   }
   default: {
     LOGERR << "We can't be here, there's a bug!" << std::endl;
   }
-
   }
+
+  if (HasItem()) {
+    m_pcLEDs->SetSingleColor(0, CColor::ORANGE);
+    m_pcLEDs->SetSingleColor(4, CColor::ORANGE);
+    m_pcLEDs->SetSingleColor(9, CColor::ORANGE);
+  }
+
+  randomWalkCounter = 0;
   m_sStateData.TicksInState = 0;
   m_sStateData.State = newState;
 }
 
 void CFootBotConstruction::SetRules(int rules[8]) {
-  int maxLight = 4; // maxvalue allowed in gene
-  phototaxisWanderRule = SRule(rules[0], 0, -1, maxLight, rules[1] == 1);
-  WanderAntiPhototaxisRule = SRule(rules[2], rules[3], -1, maxLight, rules[4] == 1);
-  AntiPhototaxisPhototaxisRule = SRule(0, 0, rules[5] / maxLight, rules[6] / maxLight, rules[7] == 1);
-}
-bool CFootBotConstruction::seesCylinder() {
-  return !m_pcCamera->GetReadings().BlobList.empty();
+  int maxLightGene = 4; // maxvalue allowed in gene
+  int maxTimeGene = 4; // maxvalue allowed in gene
+  int minLight = 0;
+  Real maxLight = 1; // maximum the light sensor detects
+  Real maxTime = 10; // maximum time in seconds
+  Real LightFactor = maxLight / maxLightGene;
+  Real TimeFactor = (maxTime / maxTimeGene) * CPhysicsEngine::GetInverseSimulationClockTick();
+  //SRule(int minT, int cInR, int minL, int maxL, bool d)
+  AntiPhototaxisExploreRule = SRule(rules[0] * TimeFactor, 0, minLight, maxLight, rules[1] == 1);
+  ExplorePhototaxisRule = SRule(rules[2] * TimeFactor, rules[3], minLight, maxLight, rules[4] == 1);
+  PhototaxisAntiphototaxisRule = SRule(0, 0, rules[5] * LightFactor, rules[6] * LightFactor, rules[7] == 1);
 }
 
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")

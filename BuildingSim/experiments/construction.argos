@@ -8,7 +8,7 @@
         <system threads="0"/>
         <experiment length="0"
                     ticks_per_second="10"
-                    random_seed="123"/>
+                    random_seed="3"/>
     </framework>
 
     <!-- *************** -->
@@ -82,7 +82,7 @@
                position="0,0,0.4"
                orientation="0,0,0"
                color="yellow"
-               intensity="100.0"
+               intensity="10.0"
                medium="leds"/>
 
         <!-- Cylinders -->

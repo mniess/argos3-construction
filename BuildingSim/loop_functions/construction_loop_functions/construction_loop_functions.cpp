@@ -80,6 +80,9 @@ void CConstructionLoopFunctions::PostExperiment() {
 CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_plane) {
   if (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(c_position_on_plane.Length()))
     return CColor::YELLOW;
+  if(c_position_on_plane.GetX() > 3.5 && c_position_on_plane.GetX() < 4 && c_position_on_plane.GetY() > 2.5 && c_position_on_plane.GetY() < 3) {
+    return CColor::RED;
+  }
   return CColor::WHITE;
 }
 
