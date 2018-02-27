@@ -7,18 +7,15 @@ import org.moeaframework.problem.AbstractProblem;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 public class NSGA2PopCode extends AbstractProblem {
 
     static {
         System.loadLibrary("nsga2_construction"); // Load native library at runtime
     }
 
-    static int numRobots = 10;
-    static int robGenomeSize = 8;
 
     public NSGA2PopCode() {
-        super(numRobots * robGenomeSize, 2);
+        super(PopCodeUtilities.genomeSize, 2);
         InitArgos();
     }
 
@@ -31,19 +28,18 @@ public class NSGA2PopCode extends AbstractProblem {
     private AtomicInteger run = new AtomicInteger(0);
 
     public void evaluate(Solution solution) {
-        int[] genome = variablesToArray(solution);
+        int[] genome = PopCodeUtilities.getGenome(solution);
         double fitness = LaunchArgos(genome);
-        double sparsity = sparsity(typeHistogram(genome));
-
+        double sparsity = PopCodeUtilities.sparsity(genome);
         solution.setObjective(0, fitness);
         solution.setObjective(1, -sparsity);
-        System.out.println(run.incrementAndGet() + ": fitness=" + fitness + ", sparsity=" + sparsity + ", genome=" + Arrays.toString(genome));
+        System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n",run.incrementAndGet(),fitness,sparsity,Arrays.toString(genome));
     }
 
     public Solution newSolution() {
-        Solution solution = new Solution(numRobots * robGenomeSize, 2);
+        Solution solution = new Solution(PopCodeUtilities.genomeSize, 2);
         int counter = 0;
-        for (int i = 0; i < numRobots; i++) {
+        for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
             //AntiPhototaxis -> Explore
             solution.setVariable(counter, EncodingUtils.newBinaryInt(0, 4)); //Time
             solution.setVariable(counter + 1, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
@@ -55,50 +51,9 @@ public class NSGA2PopCode extends AbstractProblem {
             solution.setVariable(counter + 5, EncodingUtils.newBinaryInt(0, 4)); //LowerBound Light
             solution.setVariable(counter + 6, EncodingUtils.newBinaryInt(0, 4)); //UpperBound Light
             solution.setVariable(counter + 7, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
-            counter += robGenomeSize;
+            counter += PopCodeUtilities.robGenomeSize;
         }
         return solution;
-    }
-
-    private int[] variablesToArray(Solution solution) {
-        int[] array = new int[solution.getNumberOfVariables()];
-        for (int i = 0; i < solution.getNumberOfVariables(); i++) {
-            try {
-                array[i] = EncodingUtils.getInt(solution.getVariable(i));
-            } catch (Exception e) {
-                System.err.println("Encoding Error!");
-                e.printStackTrace();
-            }
-
-        }
-        return array;
-    }
-
-    private int[] typeHistogram(int[] genome) {
-        int[] hist = new int[numRobots];
-        int[][] robGenomes = new int[numRobots][robGenomeSize];
-        for (int i = 0; i < numRobots * robGenomeSize; i += robGenomeSize) {
-            int[] g = Arrays.copyOfRange(genome, i, i + robGenomeSize);
-            for (int j = 0; j < numRobots; j++) { //sort genome into hist
-                if(hist[j] == 0) {
-                    hist[j] = 1;
-                    robGenomes[j] = g;
-                    break;
-                } else if (g.equals(robGenomes[j])) {
-                    hist[j]++;
-                }
-            }
-        }
-        return hist;
-    }
-
-    private double sparsity(int[] hist) {
-        //l0 measure (count zeros)
-        double sparsity = 0;
-        for (int i : hist) {
-            sparsity += i == 0 ? 1 : 0;
-        }
-        return sparsity;
     }
 
     private void TestJNI() {
