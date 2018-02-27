@@ -63,8 +63,7 @@
 
         <floor id="floor"
                source="loop_functions"
-               pixels_per_meter="100"/>
-
+               pixels_per_meter="1"/>
         <box id="wall_north" size="10.4,0.2,0.5" movable="false">
             <body position="0,5.1,0" orientation="0,0,0"/>
         </box>
