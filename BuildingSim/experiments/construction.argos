@@ -59,22 +59,22 @@
     <!-- *********************** -->
     <!-- * Arena configuration * -->
     <!-- *********************** -->
-    <arena size="10, 10, 2" center="0,0,1">
+    <arena size="10.2, 10.2, 2" center="0,0,1">
 
         <floor id="floor"
                source="loop_functions"
                pixels_per_meter="100"/>
 
-        <box id="wall_north" size="10,0.1,0.5" movable="false">
+        <box id="wall_north" size="10.1,0.1,0.5" movable="false">
             <body position="0,5,0" orientation="0,0,0"/>
         </box>
-        <box id="wall_south" size="10,0.1,0.5" movable="false">
+        <box id="wall_south" size="10.1,0.1,0.5" movable="false">
             <body position="0,-5,0" orientation="0,0,0"/>
         </box>
-        <box id="wall_east" size="0.1,10,0.5" movable="false">
+        <box id="wall_east" size="0.1,10.1,0.5" movable="false">
             <body position="5,0,0" orientation="0,0,0"/>
         </box>
-        <box id="wall_west" size="0.1,10,0.5" movable="false">
+        <box id="wall_west" size="0.1,10.1,0.5" movable="false">
             <body position="-5,0,0" orientation="0,0,0"/>
         </box>
 
