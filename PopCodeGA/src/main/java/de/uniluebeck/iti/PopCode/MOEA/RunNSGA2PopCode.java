@@ -18,11 +18,11 @@ public class RunNSGA2PopCode {
         NondominatedPopulation result = new Executor()
                 .withAlgorithm("NSGAII")
                 .withProblemClass(NSGA2PopCode.class)
-                //.distributeOnAllCores()//ERR!!!
+                .distributeOnAllCores()//ERR!!!
                 //.withMaxTime(1*60*1000)
                 //.withMaxEvaluations(30)
-                .withCheckpointFile(checkpointFile)
-                .withCheckpointFrequency(3)
+                //.withCheckpointFile(checkpointFile)
+                //.withCheckpointFrequency(3)
                 .run();
 
         for (Solution solution : result) {

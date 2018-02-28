@@ -17,9 +17,9 @@ public:
   void DestroyArgos();
 
 private:
-  double Evaluate(int trial);
-  std::vector<std::thread> threads;
-  std::atomic<float> fitness;
+  //double Evaluate(int trial);
+  //std::vector<std::thread> threads;
+  //std::atomic<float> fitness;
 };
 
 #endif //ARGOS3_CONSTRUCTION_ARGOSCONTROL_H

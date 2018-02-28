@@ -16,7 +16,7 @@ public class NSGA2PopCode extends AbstractProblem {
 
     public NSGA2PopCode() {
         super(80, 1);
-        InitArgos();
+        //InitArgos();
     }
 
     public native double LaunchArgos(int[] genome);
@@ -78,7 +78,7 @@ public class NSGA2PopCode extends AbstractProblem {
 
     @Override
     protected void finalize() throws Throwable {
-        DestroyArgos();
+        //DestroyArgos();
         super.finalize();
     }
 }
