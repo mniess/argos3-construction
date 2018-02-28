@@ -80,6 +80,9 @@ void CConstructionLoopFunctions::PostExperiment() {
 CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_plane) {
   if (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(c_position_on_plane.Length()))
     return CColor::YELLOW;
+  if(c_position_on_plane.GetX() > 3.5 && c_position_on_plane.GetX() < 4 && c_position_on_plane.GetY() > 2.5 && c_position_on_plane.GetY() < 3) {
+    return CColor::RED;
+  }
   return CColor::WHITE;
 }
 
@@ -151,7 +154,6 @@ float CConstructionLoopFunctions::Performance() {
       validCylinders.push_back(cylinderPos);
     }
   }
-  LOG << validCylinders.size() << " Cylinders in Range; ";
   /*Do a raycast to every degree*/
   for (int i = 0; i < 360; ++i) {
     CRadians rayCastAngle = ToRadians(CDegrees(i));
@@ -170,7 +172,7 @@ float CConstructionLoopFunctions::Performance() {
       }
     }
   }
-  LOG << "Hits: " << rayCastHit << " (" << rayCastHit / 360 << ")" << std::endl;
+  LOG << rayCastHit / 3.6 << "% (" << validCylinders.size() << " Cylinders, " << rayCastHit << " Hits)" << std::endl;
   return rayCastHit / 360.0;
 }
 

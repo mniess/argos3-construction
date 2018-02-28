@@ -6,9 +6,9 @@
     <!-- ************************* -->
     <framework>
         <system threads="0"/>
-        <experiment length="600"
+        <experiment length="800"
                     ticks_per_second="2"
-                    random_seed="123"/>
+                    random_seed="2"/>
     </framework>
 
     <!-- *************** -->
@@ -33,7 +33,7 @@
             </sensors>
             <params>
                 <diffusion go_straight_angle_range="-5:5"
-                           delta="0.5"/>
+                           delta="0.3"/>
                 <wheel_turning hard_turn_angle_threshold="90"
                                soft_turn_angle_threshold="70"
                                no_turn_angle_threshold="10"
@@ -59,30 +59,29 @@
     <!-- *********************** -->
     <!-- * Arena configuration * -->
     <!-- *********************** -->
-    <arena size="10, 10, 2" center="0,0,1">
+    <arena size="10.4, 10.4, 2" center="0,0,1">
 
         <floor id="floor"
                source="loop_functions"
-               pixels_per_meter="100"/>
-
-        <box id="wall_north" size="10,0.1,0.5" movable="false">
-            <body position="0,5,0" orientation="0,0,0"/>
+               pixels_per_meter="1"/>
+        <box id="wall_north" size="10.4,0.2,0.5" movable="false">
+            <body position="0,5.1,0" orientation="0,0,0"/>
         </box>
-        <box id="wall_south" size="10,0.1,0.5" movable="false">
-            <body position="0,-5,0" orientation="0,0,0"/>
+        <box id="wall_south" size="10.4,0.2,0.5" movable="false">
+            <body position="0,-5.1,0" orientation="0,0,0"/>
         </box>
-        <box id="wall_east" size="0.1,10,0.5" movable="false">
-            <body position="5,0,0" orientation="0,0,0"/>
+        <box id="wall_east" size="0.2,10.4,0.5" movable="false">
+            <body position="5.1,0,0" orientation="0,0,0"/>
         </box>
-        <box id="wall_west" size="0.1,10,0.5" movable="false">
-            <body position="-5,0,0" orientation="0,0,0"/>
+        <box id="wall_west" size="0.2,10.4,0.5" movable="false">
+            <body position="-5.1,0,0" orientation="0,0,0"/>
         </box>
 
         <light id="light_1"
                position="0,0,0.4"
                orientation="0,0,0"
                color="yellow"
-               intensity="100.0"
+               intensity="10.0"
                medium="leds"/>
 
         <!-- Cylinders -->

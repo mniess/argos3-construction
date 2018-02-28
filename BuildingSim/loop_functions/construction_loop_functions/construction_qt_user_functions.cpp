@@ -15,8 +15,9 @@ CConstructionQTUserFunctions::CConstructionQTUserFunctions() {
 
 void CConstructionQTUserFunctions::Draw(CFootBotEntity &c_entity) {
   auto &cController = dynamic_cast<CFootBotConstruction &>(c_entity.GetControllableEntity().GetController());
-  DrawText(CVector3(0.0, 0.0, 0.3),   // position
-           c_entity.GetId());
+  std::string label = c_entity.GetId()
+      + (cController.GetState() == 0 ? "phototaxis" : cController.GetState() == 1 ? "antiphototaxis" : "explore") + (cController.GetAction()==1 ? " p":"");
+  DrawText(CVector3(0.0, 0.0, 0.3), label);
 }
 
 /****************************************/

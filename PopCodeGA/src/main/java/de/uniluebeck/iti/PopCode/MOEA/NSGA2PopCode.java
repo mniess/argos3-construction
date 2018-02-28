@@ -1,12 +1,11 @@
 package de.uniluebeck.iti.PopCode.MOEA;
 
 import org.moeaframework.core.Solution;
-import org.moeaframework.core.Variable;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 public class NSGA2PopCode extends AbstractProblem {
 
@@ -14,8 +13,9 @@ public class NSGA2PopCode extends AbstractProblem {
         System.loadLibrary("nsga2_construction"); // Load native library at runtime
     }
 
+
     public NSGA2PopCode() {
-        super(80, 1);
+        super(PopCodeUtilities.genomeSize, 2);
         //InitArgos();
     }
 
@@ -25,34 +25,21 @@ public class NSGA2PopCode extends AbstractProblem {
 
     public native int DestroyArgos();
 
-    private AtomicInteger run = new AtomicInteger(1);
+    private AtomicInteger run = new AtomicInteger(0);
 
     public void evaluate(Solution solution) {
-        int[] a = variablesToArray(solution);
-        double fitness = LaunchArgos(a);
+        int[] genome = PopCodeUtilities.getGenome(solution);
+        double fitness = LaunchArgos(genome);
+        double sparsity = PopCodeUtilities.sparsity(genome);
         solution.setObjective(0, fitness);
-        System.out.println("Eval" + run.incrementAndGet());
-    }
-
-    private int[] variablesToArray(Solution solution) {
-        int[] array = new int[solution.getNumberOfVariables()];
-        for (int i = 0; i < solution.getNumberOfVariables(); i++) {
-            try {
-                array[i] = EncodingUtils.getInt(solution.getVariable(i));
-            } catch (Exception e) {
-                System.err.println("Encoding Error!");
-                e.printStackTrace();
-            }
-
-        }
-        return array;
+        solution.setObjective(1, -sparsity);
+        System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n",run.incrementAndGet(),fitness,sparsity,Arrays.toString(genome));
     }
 
     public Solution newSolution() {
-        int numRobots = 10;
-        Solution solution = new Solution(numRobots * 8, 1);
+        Solution solution = new Solution(PopCodeUtilities.genomeSize, 2);
         int counter = 0;
-        for (int i = 0; i < numRobots; i++) {
+        for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
             //AntiPhototaxis -> Explore
             solution.setVariable(counter, EncodingUtils.newBinaryInt(0, 4)); //Time
             solution.setVariable(counter + 1, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
@@ -64,7 +51,7 @@ public class NSGA2PopCode extends AbstractProblem {
             solution.setVariable(counter + 5, EncodingUtils.newBinaryInt(0, 4)); //LowerBound Light
             solution.setVariable(counter + 6, EncodingUtils.newBinaryInt(0, 4)); //UpperBound Light
             solution.setVariable(counter + 7, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
-            counter += 8;
+            counter += PopCodeUtilities.robGenomeSize;
         }
         return solution;
     }

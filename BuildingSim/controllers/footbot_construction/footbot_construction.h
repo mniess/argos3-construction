@@ -116,15 +116,15 @@ public:
   };
 
   struct SRule {
-    int minTimeInState;
+    int minTicksInState;
     int cylinderInRange; //-1 must not be in Range, 1 must be in Range, 0 inactive
-    int minLight;
-    int maxLight;
+    Real minLight;
+    Real maxLight;
     int drop;
-    bool Switch(Real light, Real time, bool seesCylinder);
-    SRule() : minTimeInState(INT_MIN), cylinderInRange(0), minLight(INT_MIN), maxLight(INT_MAX), drop(1) {}
-    SRule(int minT, int cInR, int minL, int maxL, bool d)
-        : minTimeInState(minT), cylinderInRange(cInR), minLight(minL), maxLight(maxL), drop(d) {}
+    bool Switch(Real light, int ticks, bool seesCylinder);
+    SRule() : minTicksInState(0), cylinderInRange(0), minLight(0), maxLight(1), drop(1) {}
+    SRule(int minT, int cInR, Real minL, Real maxL, bool d)
+        : minTicksInState(minT), cylinderInRange(cInR), minLight(minL), maxLight(maxL), drop(d) {}
   };
 
 public:
@@ -163,6 +163,10 @@ public:
   virtual void Destroy() {}
 
   void SetRules(int rules[8]);
+
+  SStateData::EState GetState() { return m_sStateData.State; };
+  SStateData::EAction GetAction() { return m_sStateData.Action; };
+
 private:
 
   /*
@@ -185,6 +189,7 @@ private:
    * perceived by the omnicam.
    */
   CVector2 LedVector(CColor color) const;
+
   /*
    * Gets a direction vector as input and transforms it into wheel
    * actuation.
@@ -216,8 +221,6 @@ private:
    */
   bool PickUpAction();
 
-private:
-
   /* Pointer to the differential steering actuator */
   CCI_DifferentialSteeringActuator *m_pcWheels;
   /* Pointer to the LEDs actuator */
@@ -244,20 +247,24 @@ private:
   /* The diffusion parameters */
   SDiffusionParams m_sDiffusionParams;
 
+  int randomWalkCounter = 0;
+  CVector2 currMoveV;
+
   bool GripperLocked = false;
 
   CVector2 RandomVector(int minDeg, int maxDeg);
 
   void SetState(SStateData::EState newState);
 
-  Real DistToNest();
+  Real LightIntensity();
   bool HasItem();
 
-  SRule phototaxisWanderRule;
-  SRule WanderAntiPhototaxisRule;
-  SRule AntiPhototaxisPhototaxisRule;
+  SRule PhototaxisAntiphototaxisRule;
+  SRule ExplorePhototaxisRule;
+  SRule AntiPhototaxisExploreRule;
 
   bool seesCylinder();
+
 };
 
 #endif

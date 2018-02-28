@@ -11,9 +11,28 @@ import java.io.File;
 import java.io.IOException;
 
 
+enum GENOME {
+    SIMPLE, SIMPLECOUNT
+}
+
 public class RunNSGA2PopCode {
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws Exception {
         File checkpointFile = new File("checkpoint.dat");
+        if (PopCodeUtilities.gType == GENOME.SIMPLE) {
+            checkpointFile = new File("checkpoint_simple.dat");
+        } else if (PopCodeUtilities.gType == GENOME.SIMPLECOUNT) {
+            checkpointFile = new File("checkpoint_simplecount.dat");
+        } else {
+            throw new Exception("Unknown genome type, don't know which checkpoint file to use");
+        }
+
+        if (checkpointFile.exists()) {
+            System.out.print("Using existing checkpointfile: ");
+        } else {
+            System.out.print("NEW checkpointfile: ");
+        }
+        System.out.println(checkpointFile.getName());
 
         NondominatedPopulation result = new Executor()
                 .withAlgorithm("NSGAII")
