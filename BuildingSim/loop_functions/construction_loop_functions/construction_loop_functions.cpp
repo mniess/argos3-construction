@@ -154,7 +154,6 @@ Real CConstructionLoopFunctions::Performance() {
       validCylinders.push_back(cylinderPos);
     }
   }
-  LOG << validCylinders.size() << " Cylinders in Range; ";
   /*Do a raycast to every degree*/
   for (int i = 0; i < 360; ++i) {
     CRadians rayCastAngle = ToRadians(CDegrees(i));
@@ -173,7 +172,7 @@ Real CConstructionLoopFunctions::Performance() {
       }
     }
   }
-  LOG << "Hits: " << rayCastHit << " (" << rayCastHit / 360 << ")" << std::endl;
+  LOG << rayCastHit / 3.6 << "% (" << validCylinders.size() << " Cylinders, " << rayCastHit << " Hits)" << std::endl;
   return rayCastHit / 360.0;
 }
 
