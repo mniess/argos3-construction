@@ -19,7 +19,7 @@ public class NSGA2PopCode extends AbstractProblem {
         InitArgos();
     }
 
-    public native double LaunchArgos(int[] genome);
+    public native double LaunchArgos(int[] genome, int evaluations);
 
     public native int InitArgos();
 
@@ -29,7 +29,7 @@ public class NSGA2PopCode extends AbstractProblem {
 
     public void evaluate(Solution solution) {
         int[] genome = PopCodeUtilities.getGenome(solution);
-        double fitness = LaunchArgos(genome);
+        double fitness = LaunchArgos(genome,2);
         double sparsity = PopCodeUtilities.sparsity(genome);
         solution.setObjective(0, fitness);
         solution.setObjective(1, -sparsity);

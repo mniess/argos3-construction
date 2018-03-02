@@ -13,7 +13,7 @@ void ArgosControl::InitArgos() {
   cSimulator.LoadExperiment();
 }
 
-double ArgosControl::LaunchArgos(int genome[], int length) {
+double ArgosControl::LaunchArgos(int genome[], int length, int evaluations) {
 
   static argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
   /* Get a reference to the loop functions */
@@ -21,14 +21,14 @@ double ArgosControl::LaunchArgos(int genome[], int length) {
       &cLoopFunctions = dynamic_cast<CConstructionLoopFunctions &>(cSimulator.GetLoopFunctions());
 
   cLoopFunctions.ConfigureFromGenome(genome, length);
-  Real performance = 0.0f;
-  for (size_t i = 0; i < 1; ++i) {
+  Real performance = 42;
+  for (size_t i = 0; i < evaluations; ++i) {
     cLoopFunctions.SetTrial(i);
 
-    cSimulator.Reset(i + 2);
+    cSimulator.Reset(i);
 
     cSimulator.Execute();
-    performance = Max(performance, cLoopFunctions.Performance());
+    performance = Min(performance, cLoopFunctions.Performance());
   }
   return performance;
 }
@@ -58,21 +58,30 @@ int main(int argc, const char *argv[]) {
                         4, 1, 0, 1, 0, 3, 4, 1,
                         4, 1, 0, 1, 0, 3, 4, 1};
 
-  int evolvGene[80] = {4, 1, 1, -1, 0, 3, 4, 0,
-                       3, 0, 1, 0, 0, 1, 4, 0,
-                       4, 1, 3, 0, 0, 2, 0, 1,
-                       1, 0, 2, 0, 1, 0, 4, 1,
-                       1, 0, 4, 1, 0, 2, 4, 1,
-                       4, 0, 2, 0, 1, 3, 1, 0,
-                       3, 0, 3, 0, 1, 3, 4, 1,
-                       3, 0, 2, -1, 1, 1, 4, 0,
-                       0, 0, 2, 0, 1, 1, 1, 1,
-                       3, 1, 3, 1, 0, 3, 4, 0};
+  int evolvGene[80] = {1, 1, 1, 1, 0, 2, 3, 0,
+                       2, 1, 4, 1, 0, 4, 1, 0,
+                       2, 0, 4, 0, 1, 3, 4, 1,
+                       0, 1, 4, 0, 0, 3, 4, 1,
+                       3, 1, 3, 1, 0, 3, 4, 1,
+                       4, 1, 1, 1, 0, 3, 4, 1,
+                       2, 1, 4, 1, 0, 2, 2, 1,
+                       3, 1, 4, 0, 0, 3, 4, 1,
+                       3, 1, 4, -1, 1, 3, 4, 0,
+                       0, 1, 0, 0, 0, 3, 4, 0};
 
-  int errorGene[80] = {4, 1, 2, 0, 0, 2, 2, 0, 1, 0, 0, 0, 0, 2, 4, 0, 1, 1, 3, 1, 1, 1, 2, 1, 4, 1, 3, -1, 0, 1, 0, 0, 3, 1, 1, -1, 1, 3, 3, 0, 2, 1, 1, 1, 0, 4, 2, 1, 2, 0, 0, 0, 1, 2, 2, 1, 1, 0, 3, 0, 0, 3, 2, 1, 1, 1, 3, 0, 0, 3, 1, 0, 0, 0, 0, -1, 1, 2, 1, 1};
+  int errorGene[80] = {4, 1, 2, 0, 0, 4, 2, 0,
+                       1, 0, 0, 0, 0, 4, 4, 0,
+                       1, 1, 3, 1, 1, 4, 2, 1,
+                       4, 1, 3, -1, 0, 4, 0, 0,
+                       3, 1, 1, -1, 1, 4, 3, 0,
+                       2, 1, 1, 1, 0, 4, 2, 1,
+                       2, 0, 0, 0, 1, 4, 2, 1,
+                       1, 0, 3, 0, 0, 4, 2, 1,
+                       1, 1, 3, 0, 0, 4, 1, 0,
+                       0, 0, 0, -1, 1, 2, 1, 1};
   //Set genome
   genome = errorGene;
 
-  c.LaunchArgos(genome, 80);
+  c.LaunchArgos(genome, 80, 1);
   //c.DestroyArgos();
 }

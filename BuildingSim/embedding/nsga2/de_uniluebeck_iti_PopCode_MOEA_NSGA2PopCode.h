@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode
  * Method:    LaunchArgos
- * Signature: ([I)D
+ * Signature: ([II)D
  */
 JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_LaunchArgos
-  (JNIEnv *, jobject, jintArray);
+  (JNIEnv *, jobject, jintArray, jint);
 
 /*
  * Class:     de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode
