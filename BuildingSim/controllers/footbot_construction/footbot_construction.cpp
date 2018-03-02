@@ -52,7 +52,7 @@ bool CFootBotConstruction::SRule::Switch(Real light, int ticks, bool seesCylinde
   bool timeRule = minTicksInState < ticks;
   bool cylinderRule = cylinderInRange == 0
       || cylinderInRange == seesCylinder; // 0: indifferent, -1 must not see cylinder, 1 must see cylinder
-  bool lightRule = light < maxLight && light > minLight;
+  bool lightRule = maxLight<=minLight || (light < maxLight && light > minLight);
   return timeRule && cylinderRule && lightRule;
 }
 
