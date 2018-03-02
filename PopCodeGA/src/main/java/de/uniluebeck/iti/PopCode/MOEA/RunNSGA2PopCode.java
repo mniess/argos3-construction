@@ -1,62 +1,164 @@
 package de.uniluebeck.iti.PopCode.MOEA;
 
+import org.moeaframework.Analyzer;
 import org.moeaframework.Executor;
+import org.moeaframework.Instrumenter;
+import org.moeaframework.analysis.collector.Accumulator;
 import org.moeaframework.analysis.plot.Plot;
 import org.moeaframework.core.NondominatedPopulation;
+import org.moeaframework.core.Population;
 import org.moeaframework.core.PopulationIO;
 import org.moeaframework.core.Solution;
-import org.moeaframework.core.variable.EncodingUtils;
 
 import java.io.File;
 import java.io.IOException;
 
 
 enum GENOME {
-    SIMPLE, SIMPLECOUNT
+    SIMPLE, SIMPLECOUNT, TEST
 }
 
 public class RunNSGA2PopCode {
 
-    public static void main(String[] args) throws Exception {
-        File checkpointFile = new File("checkpoint.dat");
-        if (PopCodeUtilities.gType == GENOME.SIMPLE) {
-            checkpointFile = new File("checkpoint_simple.dat");
-        } else if (PopCodeUtilities.gType == GENOME.SIMPLECOUNT) {
-            checkpointFile = new File("checkpoint_simplecount.dat");
-        } else {
-            throw new Exception("Unknown genome type, don't know which checkpoint file to use");
-        }
+    public static void main(String[] args) {
+        //evalSaved();
+        Instrumenter instrumenter = getInstrumenter();
 
-        if (checkpointFile.exists()) {
-            System.out.print("Using existing checkpointfile: ");
-        } else {
-            System.out.print("NEW checkpointfile: ");
-        }
-        System.out.println(checkpointFile.getName());
-
-        NondominatedPopulation result = new Executor()
-                .withAlgorithm("NSGAII")
-                .withProblemClass(NSGA2PopCode.class)
-                //.distributeOnAllCores()//ERR!!!
-                //.withMaxTime(1*60*1000)
-                //.withMaxEvaluations(30)
-                .withCheckpointFile(checkpointFile)
-                .withCheckpointFrequency(3)
-                .run();
-
-        for (Solution solution : result) {
-            System.out.printf("=> %.5f\n", solution.getObjective(0));
-        }
+        Population solutions = evaluate(instrumenter);
 
         try {
-            PopulationIO.write(new File("solutions.dat"), result);
-            System.out.println("Saved " + result.size() + " solutions!");
+            saveResults(instrumenter, solutions);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        for (Solution solution : solutions) {
+            System.out.printf("=> %.5f ; %.5f\n", solution.getObjective(0), solution.getObjective(1));
+        }
+
+        plot(instrumenter, solutions);
+
+    }
+
+    private static Instrumenter getInstrumenter() {
+        return new Instrumenter()
+                //.withProblemClass(NSGA2PopCode.class)
+                .withProblem("UF1")
+                .withFrequency(1)
+                .attachElapsedTimeCollector()
+                .attachAdaptiveMultimethodVariationCollector()
+                .attachAdaptiveTimeContinuationCollector()
+                .attachApproximationSetCollector()
+                .attachPopulationSizeCollector()
+                //needs reference set:
+                //.attachHypervolumeCollector()
+                //.attachGenerationalDistanceCollector()
+                //.attachInvertedGenerationalDistanceCollector()
+                //.attachSpacingCollector()
+                //.attachAdditiveEpsilonIndicatorCollector()
+                //.attachContributionCollector()
+                //.attachR1Collector()
+                //.attachR2Collector()
+                //.attachR3Collector()
+                ;
+    }
+
+    private static Population evaluate(Instrumenter instrumenter) {
+
+        File checkpointFile = new File(getFileAppendix() + "_checkpoint.dat");
+        System.out.print((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
+
+        Executor executor = new Executor()
+                .withAlgorithm("NSGAII")
+                .withSameProblemAs(instrumenter)
+                //.withProperty("populationSize", 2)
+                //.distributeOnAllCores()//ERR!!!
+                //.withMaxTime(3*60*1000)
+                //.withMaxEvaluations(20)
+                //.withCheckpointFile(checkpointFile)
+                //.withCheckpointFrequency(1)
+                .withInstrumenter(instrumenter);
+
+        return executor.run();
+
+    }
+
+    private static void evalSaved() {
+        String appendix = getFileAppendix();
+        try {
+            Population pop = PopulationIO.read(new File(appendix + "_Solutions.dat"));
+            plot(null,pop);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveResults(Instrumenter instrumenter, Population solutions) throws IOException {
+        String appendix = getFileAppendix();
+        //Runtime data
+        Accumulator accumulator = instrumenter.getLastAccumulator();
+        accumulator.saveCSV(new File(appendix + "accumulated.csv"));
+
+        //Results
+        PopulationIO.write(new File(appendix + "_Solutions.dat"), solutions);
+        PopulationIO.writeObjectives(new File(appendix + "_Objectives.dat"), solutions);
+
+        System.out.println("Saved " + solutions.size() + " solutions!");
+    }
+
+
+    private static void plot(Instrumenter instrumenter, Population solutions) {
+        if (solutions != null) {
+            new Plot()
+                    .add("Pareto optimal Solutions", solutions)
+                    .show();
+        }
+
+        if (instrumenter != null) {
+            Accumulator acc = instrumenter.getLastAccumulator();
+            if (acc != null) {
+                new Plot().add(acc).show();
+            } else {
+                System.out.println("Accumulator null!");
+            }
+        }
+
+    }
+
+
+    private static void AnalyzerStuff(Instrumenter instrumenter, NondominatedPopulation solutions) {
+        Analyzer analyzer = new Analyzer()
+                .withSameProblemAs(instrumenter)
+                .add("NSGAII", solutions)
+                .includeHypervolume()
+                .showStatisticalSignificance()
+                .includeGenerationalDistance()
+                .includeSpacing()
+                .includeAllMetrics()
+                .showStatisticalSignificance()
+                //.showAll()
+                ;
         new Plot()
-                .add("NSGAII", result)
+                .add(analyzer)
                 .show();
+    }
+
+    private static String getFileAppendix() {
+        String fileAppendix;
+        switch (PopCodeUtilities.gType) {
+            case SIMPLE:
+                fileAppendix = "simple";
+                break;
+            case SIMPLECOUNT:
+                fileAppendix = "simple_count";
+                break;
+            case TEST:
+                fileAppendix = "test";
+                break;
+            default:
+                fileAppendix = "pleaseConfigureCorrect";
+                break;
+        }
+        return fileAppendix;
     }
 }
