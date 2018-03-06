@@ -1,6 +1,7 @@
 *.iml
 *.log
 *.dat
+*.csv
 
 *vgcore*
 
