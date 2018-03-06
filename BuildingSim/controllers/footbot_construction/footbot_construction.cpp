@@ -52,7 +52,7 @@ bool CFootBotConstruction::SRule::Switch(Real light, int ticks, bool seesCylinde
   bool timeRule = minTicksInState < ticks;
   bool cylinderRule = cylinderInRange == 0
       || cylinderInRange == seesCylinder; // 0: indifferent, -1 must not see cylinder, 1 must see cylinder
-  bool lightRule = maxLight<=minLight || (light < maxLight && light > minLight);
+  bool lightRule = maxLight <= minLight || (light < maxLight && light > minLight);
   return timeRule && cylinderRule && lightRule;
 }
 
@@ -388,14 +388,7 @@ bool CFootBotConstruction::PickUpAction() {
 
   if (cCCyl.Length() != 0) { // Cylinder detected
     if (cCCyl.Length() < 11) { // Cylinder is within reach, grip it!
-      if (cCCyl.Angle() < ToRadians(CDegrees(1)) && cCCyl.Angle() > ToRadians(CDegrees(-1))) {
-//        if(m_pcTurretEnc->GetRotation() != CRadians(0)) {
-//          LOG<< GetId() << " Gripper not ready yet is: " << m_pcTurretEnc->GetRotation() << std::endl;
-//          m_pcTurret->SetPositionControlMode();
-//          m_pcTurret->SetRotation(CRadians(0));
-//          m_pcWheels->SetLinearVelocity(0, 0);
-//          return false;
-//        }
+      if (cCCyl.Angle() < ToRadians(CDegrees(2)) && cCCyl.Angle() > ToRadians(CDegrees(-2))) {
         GripperLocked = true;
         m_pcGripper->LockPositive();
         m_pcTurret->SetPassiveMode();
@@ -403,10 +396,6 @@ bool CFootBotConstruction::PickUpAction() {
       } else {
         int rotDir = cCCyl.Angle() < CRadians::ZERO ? 1 : -1;
         m_pcWheels->SetLinearVelocity(rotDir, -rotDir);
-        //m_pcLEDs->SetAllColors(CColor::ORANGE);
-        m_pcLEDs->SetSingleColor(2, CColor::CYAN);
-        m_pcLEDs->SetSingleColor(6, CColor::CYAN);
-        m_pcLEDs->SetSingleColor(11, CColor::CYAN);
       }
     } else { //move towards cylinder
       SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cCCyl.Normalize());
@@ -437,12 +426,6 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
   default: {
     LOGERR << "We can't be here, there's a bug!" << std::endl;
   }
-  }
-
-  if (HasItem()) {
-    m_pcLEDs->SetSingleColor(0, CColor::ORANGE);
-    m_pcLEDs->SetSingleColor(4, CColor::ORANGE);
-    m_pcLEDs->SetSingleColor(9, CColor::ORANGE);
   }
 
   randomWalkCounter = 0;
