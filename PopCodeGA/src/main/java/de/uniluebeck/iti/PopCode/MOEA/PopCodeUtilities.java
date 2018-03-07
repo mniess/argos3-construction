@@ -19,9 +19,9 @@ public class PopCodeUtilities {
     public static int[] getGenome(Solution solution) {
         switch (gType) {
             case SIMPLE:
-                return toArray(solution);
+                return varsToArray(solution);
             case SIMPLECOUNT:
-                int[] a = toArray(solution);
+                int[] a = varsToArray(solution);
                 return combineFromIndex(Arrays.copyOfRange(a, 0, a.length - numRobots), Arrays.copyOfRange(a, a.length - numRobots, a.length));
             default:
                 return null;
@@ -32,14 +32,12 @@ public class PopCodeUtilities {
         int[] genome = new int[PopCodegenomeSize];
         for (int i = 0; i < numRobots; i++) {
             int begin = indices[i] * robGenomeSize;
-            for (int j = 0; j < robGenomeSize; j++) {
-                genome[i * robGenomeSize + j] = values[begin + j];
-            }
+            System.arraycopy(values, begin, genome, i * robGenomeSize, robGenomeSize);
         }
         return genome;
     }
 
-    private static int[] toArray(Solution solution) {
+    public static int[] varsToArray(Solution solution) {
         int[] array = new int[solution.getNumberOfVariables()];
         for (int i = 0; i < solution.getNumberOfVariables(); i++) {
             try {
