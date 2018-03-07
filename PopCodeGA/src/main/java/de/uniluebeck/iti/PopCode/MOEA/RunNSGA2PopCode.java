@@ -15,6 +15,10 @@ import org.moeaframework.core.operator.real.SBX;
 
 public class RunNSGA2PopCode {
 
+    static int populationSize = 100;
+    static int elitism = 2;
+    static int generations = 250;
+
     public static void main(String[] args) {
         PopCodeLogger logger;
         if (args.length == 1) {
@@ -43,9 +47,9 @@ public class RunNSGA2PopCode {
 
         Initialization initialization = new RandomInitialization(
                 problem,
-                100);
+                populationSize);
 
-        TournamentSelection selection = new TournamentSelection(2,
+        TournamentSelection selection = new TournamentSelection(elitism,
                 new ChainedComparator(
                         new ParetoDominanceComparator(),
                         new CrowdingComparator()));
@@ -65,7 +69,7 @@ public class RunNSGA2PopCode {
         // Make sure you delete the checkpoints file after a successful run
         algorithm = new Checkpoints(algorithm, logger.checkpointFile, 1);
 
-        while (algorithm.getNumberOfEvaluations() < 10000) {
+        while (algorithm.getNumberOfEvaluations() < generations*populationSize) {
             algorithm.step();
             logger.log(algorithm.getNumberOfEvaluations(), algorithm.getResult());
         }
