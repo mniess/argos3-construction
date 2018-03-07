@@ -15,7 +15,7 @@ public class NSGA2PopCode extends AbstractProblem {
 
 
     public NSGA2PopCode() {
-        super(PopCodeUtilities.genomeSize, 2);
+        super(PopCodeUtilities.GAgenomeSize, 2);
         InitArgos();
     }
 
@@ -29,15 +29,15 @@ public class NSGA2PopCode extends AbstractProblem {
 
     public void evaluate(Solution solution) {
         int[] genome = PopCodeUtilities.getGenome(solution);
-        double fitness = LaunchArgos(genome,2);
+        double fitness = LaunchArgos(genome, 2);
         double sparsity = PopCodeUtilities.sparsity(genome);
         solution.setObjective(0, fitness);
         solution.setObjective(1, -sparsity);
-        System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n",run.incrementAndGet(),fitness,sparsity,Arrays.toString(genome));
+        System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
     }
 
     public Solution newSolution() {
-        Solution solution = new Solution(PopCodeUtilities.genomeSize, 2);
+        Solution solution = new Solution(PopCodeUtilities.GAgenomeSize, 2);
         int counter = 0;
         for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
             //AntiPhototaxis -> Explore
@@ -52,6 +52,13 @@ public class NSGA2PopCode extends AbstractProblem {
             solution.setVariable(counter + 6, EncodingUtils.newBinaryInt(0, 4)); //UpperBound Light
             solution.setVariable(counter + 7, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
             counter += PopCodeUtilities.robGenomeSize;
+        }
+        if (PopCodeUtilities.gType == GENOME.SIMPLECOUNT) {
+
+            for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
+                solution.setVariable(counter + i, EncodingUtils.newBinaryInt(0, PopCodeUtilities.numRobots - 1));
+
+            }
         }
         return solution;
     }

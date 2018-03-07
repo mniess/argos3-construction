@@ -13,14 +13,15 @@ import org.moeaframework.core.Solution;
 import java.io.File;
 import java.io.IOException;
 
-
-enum GENOME {
-    SIMPLE, SIMPLECOUNT, TEST
-}
-
 public class RunNSGA2PopCode {
 
+    private static String identifier = "";
+
     public static void main(String[] args) {
+        if (args.length == 1) {
+            identifier = "_" + args[0];
+        }
+
         //evalSaved();
         Instrumenter instrumenter = getInstrumenter();
 
@@ -42,8 +43,8 @@ public class RunNSGA2PopCode {
 
     private static Instrumenter getInstrumenter() {
         return new Instrumenter()
-                //.withProblemClass(NSGA2PopCode.class)
-                .withProblem("UF1")
+                .withProblemClass(NSGA2PopCode.class)
+                //.withProblem("UF1")
                 .withFrequency(1)
                 .attachElapsedTimeCollector()
                 .attachAdaptiveMultimethodVariationCollector()
@@ -61,12 +62,13 @@ public class RunNSGA2PopCode {
                 //.attachR2Collector()
                 //.attachR3Collector()
                 ;
+
     }
 
     private static Population evaluate(Instrumenter instrumenter) {
 
         File checkpointFile = new File(getFileAppendix() + "_checkpoint.dat");
-        System.out.print((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
+        System.out.println((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
 
         Executor executor = new Executor()
                 .withAlgorithm("NSGAII")
@@ -76,9 +78,9 @@ public class RunNSGA2PopCode {
                 //.withMaxTime(3*60*1000)
                 //.withMaxEvaluations(20)
                 //.withCheckpointFile(checkpointFile)
-                //.withCheckpointFrequency(1)
-                .withInstrumenter(instrumenter);
-
+                //.checkpointEveryIteration()
+                .withInstrumenter(instrumenter)
+                .withProgressListener(new PopCodeLogger());
         return executor.run();
 
     }
@@ -87,7 +89,7 @@ public class RunNSGA2PopCode {
         String appendix = getFileAppendix();
         try {
             Population pop = PopulationIO.read(new File(appendix + "_Solutions.dat"));
-            plot(null,pop);
+            plot(null, pop);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -97,7 +99,7 @@ public class RunNSGA2PopCode {
         String appendix = getFileAppendix();
         //Runtime data
         Accumulator accumulator = instrumenter.getLastAccumulator();
-        accumulator.saveCSV(new File(appendix + "accumulated.csv"));
+        accumulator.saveCSV(new File(appendix + "_accumulated.csv"));
 
         //Results
         PopulationIO.write(new File(appendix + "_Solutions.dat"), solutions);
@@ -144,21 +146,6 @@ public class RunNSGA2PopCode {
     }
 
     private static String getFileAppendix() {
-        String fileAppendix;
-        switch (PopCodeUtilities.gType) {
-            case SIMPLE:
-                fileAppendix = "simple";
-                break;
-            case SIMPLECOUNT:
-                fileAppendix = "simple_count";
-                break;
-            case TEST:
-                fileAppendix = "test";
-                break;
-            default:
-                fileAppendix = "pleaseConfigureCorrect";
-                break;
-        }
-        return fileAppendix;
+        return PopCodeUtilities.gType + identifier;
     }
 }
