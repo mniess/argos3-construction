@@ -44,7 +44,6 @@ public class RunNSGA2PopCode {
     private static Instrumenter getInstrumenter() {
         return new Instrumenter()
                 .withProblemClass(NSGA2PopCode.class)
-                //.withProblem("UF1")
                 .withFrequency(1)
                 .attachElapsedTimeCollector()
                 .attachAdaptiveMultimethodVariationCollector()
@@ -73,14 +72,15 @@ public class RunNSGA2PopCode {
         Executor executor = new Executor()
                 .withAlgorithm("NSGAII")
                 .withSameProblemAs(instrumenter)
-                //.withProperty("populationSize", 2)
+                //.withProperty("populationSize", 1)
                 //.distributeOnAllCores()//ERR!!!
                 //.withMaxTime(3*60*1000)
                 //.withMaxEvaluations(20)
-                //.withCheckpointFile(checkpointFile)
-                //.checkpointEveryIteration()
+                .withCheckpointFile(checkpointFile)
+                .checkpointEveryIteration()
                 .withInstrumenter(instrumenter)
-                .withProgressListener(new PopCodeLogger());
+                .withProgressListener(new PopCodeLogger(checkpointFile.exists()))
+                ;
         return executor.run();
 
     }
@@ -145,7 +145,7 @@ public class RunNSGA2PopCode {
                 .show();
     }
 
-    private static String getFileAppendix() {
+    public static String getFileAppendix() {
         return PopCodeUtilities.gType + identifier;
     }
 }
