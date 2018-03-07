@@ -65,6 +65,7 @@ public class PopCodeUtilities {
                     break;
                 } else if (Arrays.equals(g, robGenomes[j])) {
                     hist[j]++;
+                    break;
                 }
             }
         }
