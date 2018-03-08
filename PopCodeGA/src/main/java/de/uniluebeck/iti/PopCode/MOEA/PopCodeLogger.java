@@ -22,7 +22,7 @@ public class PopCodeLogger implements ProgressListener {
         System.out.println((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
 
         try {
-            File logFile = new File(getFileAppendix() + "_log.dat");
+            File logFile = new File(getFileAppendix() + "_log.csv");
             writer = new BufferedWriter(new FileWriter(logFile, checkpointFile.exists()));
         } catch (IOException e) {
             e.printStackTrace();
@@ -43,6 +43,7 @@ public class PopCodeLogger implements ProgressListener {
                 writer.write(s.getObjective(0) + "; ");
                 writer.write(s.getObjective(1) + "; ");
                 writer.write(Arrays.toString(PopCodeUtilities.varsToArray(s)) + "; ");
+                writer.write("\n");
             }
             writer.flush();
         } catch (IOException e) {
