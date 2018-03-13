@@ -7,6 +7,7 @@ import org.moeaframework.core.*;
 import org.moeaframework.core.comparator.ChainedComparator;
 import org.moeaframework.core.comparator.CrowdingComparator;
 import org.moeaframework.core.comparator.ParetoDominanceComparator;
+import org.moeaframework.core.indicator.Hypervolume;
 import org.moeaframework.core.operator.GAVariation;
 import org.moeaframework.core.operator.RandomInitialization;
 import org.moeaframework.core.operator.TournamentSelection;
@@ -44,7 +45,9 @@ public class RunNSGA2PopCode {
     private static Population evaluate(PopCodeLogger logger) {
 
         Problem problem = new NSGA2PopCode();
-
+        double[] idealPoint = {1, PopCodeUtilities.numRobots};
+        double[] referencePoint = {0, 0};
+        Hypervolume hypervolume = new Hypervolume(problem, idealPoint,referencePoint);
         Initialization initialization = new RandomInitialization(
                 problem,
                 populationSize);
@@ -69,9 +72,9 @@ public class RunNSGA2PopCode {
         // Make sure you delete the checkpoints file after a successful run
         algorithm = new Checkpoints(algorithm, logger.checkpointFile, 1);
 
-        while (algorithm.getNumberOfEvaluations() < generations*populationSize) {
+        while (algorithm.getNumberOfEvaluations() < generations * populationSize) {
             algorithm.step();
-            logger.log(algorithm.getNumberOfEvaluations(), algorithm.getResult());
+            logger.log(algorithm.getNumberOfEvaluations(), algorithm.getResult(), hypervolume.evaluate(algorithm.getResult()));
         }
 
         return algorithm.getResult();

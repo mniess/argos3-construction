@@ -33,13 +33,13 @@ public class PopCodeLogger implements ProgressListener {
     @Override
     public void progressUpdate(ProgressEvent event) {
         System.out.println("Generation finished!");
-        log(event.getCurrentNFE(), new NondominatedPopulation());
     }
 
-    public void log(int nfe, NondominatedPopulation solutions) {
+    public void log(int nfe, NondominatedPopulation solutions, double hypervolume) {
         try {
             for (Solution s : solutions) {
                 writer.write(nfe + "; ");
+                writer.write(hypervolume + "; ");
                 writer.write(s.getObjective(0) + "; ");
                 writer.write(s.getObjective(1) + "; ");
                 writer.write(Arrays.toString(PopCodeUtilities.varsToArray(s)) + "; ");
