@@ -18,7 +18,7 @@ public class RunNSGA2PopCode {
 
     static int populationSize = 100;
     static int elitism = 2;
-    static int generations = 250;
+    static int generations = 1000;
 
     public static void main(String[] args) {
         PopCodeLogger logger;
@@ -45,8 +45,8 @@ public class RunNSGA2PopCode {
     private static Population evaluate(PopCodeLogger logger) {
 
         Problem problem = new NSGA2PopCode();
-        double[] idealPoint = {1, PopCodeUtilities.numRobots};
-        double[] referencePoint = {0, 0};
+        double[] idealPoint = {-1, -PopCodeUtilities.numRobots};
+        double[] referencePoint = {1, 1};
         Hypervolume hypervolume = new Hypervolume(problem, idealPoint,referencePoint);
         Initialization initialization = new RandomInitialization(
                 problem,
