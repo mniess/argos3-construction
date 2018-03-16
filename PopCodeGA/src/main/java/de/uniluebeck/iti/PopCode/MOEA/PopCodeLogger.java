@@ -8,21 +8,26 @@ import org.moeaframework.util.progress.ProgressEvent;
 import org.moeaframework.util.progress.ProgressListener;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Date;
 
 public class PopCodeLogger implements ProgressListener {
-    Writer writer;
+    private Writer writer;
     private String identifier = "";
     public File checkpointFile;
+    private File logFile;
+    private File statsFile;
 
-    public PopCodeLogger(String identifier) {
+    PopCodeLogger(String identifier) {
         this.identifier = identifier;
 
         checkpointFile = new File(getFileAppendix() + "_checkpoint.dat");
         System.out.println((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
 
         try {
-            File logFile = new File(getFileAppendix() + "_log.csv");
+            logFile = new File(getFileAppendix() + "_log.csv");
             writer = new BufferedWriter(new FileWriter(logFile, checkpointFile.exists()));
         } catch (IOException e) {
             e.printStackTrace();
@@ -51,6 +56,29 @@ public class PopCodeLogger implements ProgressListener {
         }
     }
 
+    public void safeStats(){
+        try {
+            statsFile = new File(getFileAppendix() + "_stats.txt");
+            Writer w = new BufferedWriter(new FileWriter(statsFile, false));
+            w.write("StartTime="+new Date().toString()+"\n");
+            w.write("GenomType="+PopCodeUtilities.gType+"\n");
+            w.write("Sim:\n");
+            w.write("numRobots="+PopCodeUtilities.numRobots+"\n");
+            w.write("robGenomeSize="+PopCodeUtilities.robGenomeSize+"\n");
+            w.write("evaluations="+RunNSGA2PopCode.evaluations+"\n");
+            w.write("GA:\n");
+            w.write("populationSize="+RunNSGA2PopCode.populationSize+"\n");
+            w.write("elitism="+RunNSGA2PopCode.elitism+"\n");
+            w.write("generations="+RunNSGA2PopCode.generations+"\n");
+            w.write("GAgenomeSize="+PopCodeUtilities.GAgenomeSize+"\n");
+            w.write("PopCodegenomeSize="+PopCodeUtilities.PopCodegenomeSize+"\n");
+            w.flush();
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void saveResults(Population solutions) {
         String appendix = getFileAppendix();
 
@@ -65,7 +93,7 @@ public class PopCodeLogger implements ProgressListener {
         System.out.println("Saved " + solutions.size() + " solutions!");
     }
 
-    public String getFileAppendix() {
+    private String getFileAppendix() {
         return PopCodeUtilities.gType + identifier;
     }
 
@@ -76,5 +104,24 @@ public class PopCodeLogger implements ProgressListener {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void cleanUp() {
+        if(checkpointFile.exists()){
+            checkpointFile.delete();
+        }
+        try {
+            if(logFile.exists()){
+                File dst = new File(System.getProperty("user.home")+"/ArgosResults/"+logFile.getName());
+                dst.getParentFile().mkdirs();
+                Files.copy(logFile.toPath(),dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            if(statsFile.exists()){
+                File dst = new File(System.getProperty("user.home")+"/ArgosResults/"+statsFile.getName());
+                Files.copy(statsFile.toPath(),dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

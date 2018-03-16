@@ -19,6 +19,7 @@ public class RunNSGA2PopCode {
     static int populationSize = 100;
     static int elitism = 2;
     static int generations = 1000;
+    static int evaluations = 3;
 
     public static void main(String[] args) {
         PopCodeLogger logger;
@@ -29,6 +30,7 @@ public class RunNSGA2PopCode {
         }
 
         //evalSaved();
+        logger.safeStats();
 
         Population solutions = evaluate(logger);
 
@@ -44,7 +46,7 @@ public class RunNSGA2PopCode {
 
     private static Population evaluate(PopCodeLogger logger) {
 
-        Problem problem = new NSGA2PopCode();
+        Problem problem = new NSGA2PopCode(evaluations);
         double[] idealPoint = {-1, -PopCodeUtilities.numRobots};
         double[] referencePoint = {1, 1};
         Hypervolume hypervolume = new Hypervolume(problem, idealPoint,referencePoint);
@@ -76,7 +78,7 @@ public class RunNSGA2PopCode {
             algorithm.step();
             logger.log(algorithm.getNumberOfEvaluations(), algorithm.getResult(), hypervolume.evaluate(algorithm.getResult()));
         }
-
+        logger.cleanUp();
         return algorithm.getResult();
     }
 

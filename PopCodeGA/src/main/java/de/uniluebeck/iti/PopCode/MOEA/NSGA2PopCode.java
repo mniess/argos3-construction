@@ -9,13 +9,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NSGA2PopCode extends AbstractProblem {
 
+    int evaluations = 3;
+
     static {
         System.loadLibrary("nsga2_construction"); // Load native library at runtime
     }
 
 
-    public NSGA2PopCode() {
+    public NSGA2PopCode(int evaluations) {
         super(PopCodeUtilities.GAgenomeSize, 2);
+        this.evaluations = evaluations;
         InitArgos();
     }
 
@@ -29,7 +32,7 @@ public class NSGA2PopCode extends AbstractProblem {
 
     public void evaluate(Solution solution) {
         int[] genome = PopCodeUtilities.getGenome(solution);
-        double fitness = LaunchArgos(genome, 2);
+        double fitness = LaunchArgos(genome, evaluations);
         double sparsity = PopCodeUtilities.sparsity(genome);
         solution.setObjective(0, fitness);
         solution.setObjective(1, -sparsity);
