@@ -46,7 +46,7 @@ public class RunNSGA2PopCode {
 
     private static Population evaluate(PopCodeLogger logger) {
 
-        Problem problem = new NSGA2PopCode(evaluations);
+        Problem problem = new NSGA2PopCode(evaluations,logger);
         double[] idealPoint = {-1, -PopCodeUtilities.numRobots};
         double[] referencePoint = {1, 1};
         Hypervolume hypervolume = new Hypervolume(problem, idealPoint,referencePoint);
