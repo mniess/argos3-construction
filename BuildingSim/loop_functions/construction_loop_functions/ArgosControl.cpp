@@ -30,7 +30,7 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations) {
 
       cSimulator.Execute();
       performance = Min(performance, cLoopFunctions.Performance());
-    } catch (...) {}
+    } catch(CARGoSException& ex) {}
   }
   return performance;
 }
