@@ -23,12 +23,14 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations) {
   cLoopFunctions.ConfigureFromGenome(genome, length);
   Real performance = 42;
   for (size_t i = 0; i < evaluations; ++i) {
-    cLoopFunctions.SetTrial(i);
+    try {
+      cLoopFunctions.SetTrial(i);
 
-    cSimulator.Reset(i);
+      cSimulator.Reset(i);
 
-    cSimulator.Execute();
-    performance = Min(performance, cLoopFunctions.Performance());
+      cSimulator.Execute();
+      performance = Min(performance, cLoopFunctions.Performance());
+    } catch (...) {}
   }
   return performance;
 }

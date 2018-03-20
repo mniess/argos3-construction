@@ -237,7 +237,7 @@ CVector2 CFootBotConstruction::RandomVector(int minDeg = 0, int maxDeg = 360) {
 /****************************************/
 
 bool CFootBotConstruction::HasItem() {
-  return GripperLocked;// && LedVector(CColor::PURPLE).Length() < 12;
+  return GripperLocked;
 }
 
 bool CFootBotConstruction::seesCylinder() {

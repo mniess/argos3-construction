@@ -10,15 +10,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NSGA2PopCode extends AbstractProblem {
 
     int evaluations = 3;
+    PopCodeLogger logger;
 
     static {
         System.loadLibrary("nsga2_construction"); // Load native library at runtime
     }
 
 
-    public NSGA2PopCode(int evaluations) {
+    public NSGA2PopCode(int evaluations, PopCodeLogger logger) {
         super(PopCodeUtilities.GAgenomeSize, 2);
         this.evaluations = evaluations;
+        this.logger = logger;
         InitArgos();
     }
 
@@ -31,12 +33,24 @@ public class NSGA2PopCode extends AbstractProblem {
     private AtomicInteger run = new AtomicInteger(0);
 
     public void evaluate(Solution solution) {
+        try{
+
+
         int[] genome = PopCodeUtilities.getGenome(solution);
-        double fitness = LaunchArgos(genome, evaluations);
+        double fitness = 1;
+        try {
+             fitness = LaunchArgos(genome, evaluations);
+        } catch (Exception e) {
+            logger.err("Error with getting results. Writing 1 as Fitness...");
+        }
+
         double sparsity = PopCodeUtilities.sparsity(genome);
         solution.setObjective(0, fitness);
         solution.setObjective(1, -sparsity);
         System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
+        } catch (Exception e) {
+            logger.err(e.getMessage());
+        }
     }
 
     public Solution newSolution() {

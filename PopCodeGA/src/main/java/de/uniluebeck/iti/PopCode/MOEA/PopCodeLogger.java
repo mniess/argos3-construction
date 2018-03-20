@@ -9,16 +9,19 @@ import org.moeaframework.util.progress.ProgressListener;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Date;
 
-public class PopCodeLogger implements ProgressListener {
+public class PopCodeLogger {
     private Writer writer;
     private String identifier = "";
     public File checkpointFile;
     private File logFile;
     private File statsFile;
+    private File errFile;
 
     PopCodeLogger(String identifier) {
         this.identifier = identifier;
@@ -35,11 +38,6 @@ public class PopCodeLogger implements ProgressListener {
 
     }
 
-    @Override
-    public void progressUpdate(ProgressEvent event) {
-        System.out.println("Generation finished!");
-    }
-
     public void log(int nfe, NondominatedPopulation solutions, double hypervolume) {
         try {
             for (Solution s : solutions) {
@@ -51,6 +49,18 @@ public class PopCodeLogger implements ProgressListener {
                 writer.write("\n");
             }
             writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void err(String message) {
+        try {
+            if(errFile == null || !errFile.exists()) {
+                errFile = new File(getFileAppendix() + "_err.log");
+                errFile.createNewFile();
+            }
+            Files.write(Paths.get(getFileAppendix() + "_err.log"),Arrays.asList(message), StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
         }
