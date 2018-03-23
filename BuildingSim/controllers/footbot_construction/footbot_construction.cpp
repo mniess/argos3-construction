@@ -387,7 +387,7 @@ bool CFootBotConstruction::PickUpAction() {
   CVector2 cCCyl = LedVector(CColor().PURPLE);
 
   if (cCCyl.Length() != 0) { // Cylinder detected
-    if (cCCyl.Length() < 11) { // Cylinder is within reach, grip it!
+    if (cCCyl.Length() < 10) { // Cylinder is within reach, grip it!
       if (cCCyl.Angle() < ToRadians(CDegrees(2)) && cCCyl.Angle() > ToRadians(CDegrees(-2))) {
         GripperLocked = true;
         m_pcGripper->LockPositive();
@@ -396,6 +396,7 @@ bool CFootBotConstruction::PickUpAction() {
       } else {
         int rotDir = cCCyl.Angle() < CRadians::ZERO ? 1 : -1;
         m_pcWheels->SetLinearVelocity(rotDir, -rotDir);
+        return false;
       }
     } else { //move towards cylinder
       SetWheelSpeeds(m_sWheelTurningParams.MaxSpeed * cCCyl.Normalize());
