@@ -118,9 +118,14 @@ void CConstructionLoopFunctions::PreStep() {
   }
 }
 
-void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length) {
+void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, std::string genomeType) {
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   int singleGenomeLength = 8;
+  std::cout << genomeType;
+  LOG << genomeType;
+  if(genomeType == "fullCount") {
+    singleGenomeLength = 15;
+  }
   if (tFBMap.size() * singleGenomeLength == length) {
     int i = 0;
     for (auto const &it : tFBMap) {
@@ -128,7 +133,7 @@ void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length) {
       CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it.second);
       CFootBotConstruction
           *currController = &dynamic_cast<CFootBotConstruction &>(pcFB->GetControllableEntity().GetController());
-      currController->SetRules(genome + (i++ * singleGenomeLength));
+      currController->SetRules(genome + (i++ * singleGenomeLength),genomeType);
     }
   } else {
     LOGERR << "Genome does not have correct length!" << std::endl;

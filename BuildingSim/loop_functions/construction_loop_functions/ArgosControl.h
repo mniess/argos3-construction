@@ -11,7 +11,7 @@ public:
 
   static ArgosControl& GetInstance() {static ArgosControl control; return control; };
   void InitArgos();
-  double LaunchArgos(int genome[], int length, int i);
+  double LaunchArgos(int genome[], int length, int i, std::string genomeType);
   void DestroyArgos();
 
 private:

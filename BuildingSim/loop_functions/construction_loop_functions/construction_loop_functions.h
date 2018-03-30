@@ -35,7 +35,7 @@ public:
   }
 
   /* Configures the robot controller from the genome */
-  void ConfigureFromGenome(int genome[], int length);
+  void ConfigureFromGenome(int genome[], int length, std::string genomeType);
 
 private:
   SConstructionParams m_sConstructionParams;

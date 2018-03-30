@@ -7,7 +7,7 @@
 
 JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_LaunchArgos(JNIEnv *env,
                                                                                        jobject,
-                                                                                       jintArray p_array, jint evals) {
+                                                                                       jintArray p_array, jint evals,jstring genomeType) {
   /* Return the negative result of the evaluation because nsgaII is minimizing*/
   jsize len = env->GetArrayLength(p_array);
   jint *body = env->GetIntArrayElements(p_array, nullptr);
@@ -15,7 +15,9 @@ JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_Launc
   std::copy(body, body + len, genome);
   env->ReleaseIntArrayElements(p_array, body, 0);
 
-  return -ArgosControl::GetInstance().LaunchArgos(genome, len, evals);
+  const char *cstrGenomeType = env->GetStringUTFChars(genomeType, NULL);
+  env->ReleaseStringUTFChars(genomeType, cstrGenomeType);
+  return -ArgosControl::GetInstance().LaunchArgos(genome, len, evals, std::string(cstrGenomeType));
 }
 
 JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_InitArgos(JNIEnv *, jobject) {

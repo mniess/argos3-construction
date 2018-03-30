@@ -162,7 +162,7 @@ public:
    */
   virtual void Destroy() {}
 
-  void SetRules(int rules[8]);
+  void SetRules(int rules[], std::string genomeType);
 
   SStateData::EState GetState() { return m_sStateData.State; };
   SStateData::EAction GetAction() { return m_sStateData.Action; };

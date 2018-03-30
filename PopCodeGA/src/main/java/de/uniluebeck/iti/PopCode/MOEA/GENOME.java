@@ -1,7 +1,7 @@
 package de.uniluebeck.iti.PopCode.MOEA;
 
 public enum GENOME {
-    SIMPLE("simple"), SIMPLECOUNT("simpleCount"), TEST("test");
+    SIMPLE("simple"), SIMPLECOUNT("simpleCount"), FULLCOUNT("fullCount"), TEST("test");
 
     private final String desc;
 

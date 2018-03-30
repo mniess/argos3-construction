@@ -7,10 +7,10 @@ import java.util.Arrays;
 
 public class PopCodeUtilities {
 
-    public static GENOME gType = GENOME.SIMPLECOUNT;
+    public static GENOME gType = GENOME.FULLCOUNT;
 
     public static int numRobots = 10;
-    public static int robGenomeSize = 8;
+    public static int robGenomeSize = gType==GENOME.FULLCOUNT? 15 : 8;
 
     public static int PopCodegenomeSize = numRobots * robGenomeSize;
     public static int GAgenomeSize = PopCodegenomeSize + (gType == GENOME.SIMPLE ? 0 : numRobots);
@@ -28,6 +28,12 @@ public class PopCodeUtilities {
         }
     }
 
+    /**
+     *
+     * @param values robotgenomes
+     * @param indices which genomes should be used
+     * @return
+     */
     private static int[] combineFromIndex(int[] values, int[] indices) {
         int[] genome = new int[PopCodegenomeSize];
         for (int i = 0; i < numRobots; i++) {

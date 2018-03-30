@@ -434,7 +434,7 @@ void CFootBotConstruction::SetState(SStateData::EState newState) {
   m_sStateData.State = newState;
 }
 
-void CFootBotConstruction::SetRules(int rules[8]) {
+void CFootBotConstruction::SetRules(int rules[], std::string genomeType) {
   int maxLightGene = 4; // maxvalue allowed in gene
   int maxTimeGene = 4; // maxvalue allowed in gene
   int minLight = 0;
@@ -443,9 +443,15 @@ void CFootBotConstruction::SetRules(int rules[8]) {
   Real LightFactor = maxLight / maxLightGene;
   Real TimeFactor = (maxTime / maxTimeGene) * CPhysicsEngine::GetInverseSimulationClockTick();
   //SRule(int minT, int cInR, int minL, int maxL, bool d)
-  AntiPhototaxisExploreRule = SRule(rules[0] * TimeFactor, 0, minLight, maxLight, rules[1] == 1);
-  ExplorePhototaxisRule = SRule(rules[2] * TimeFactor, rules[3], minLight, maxLight, rules[4] == 1);
-  PhototaxisAntiphototaxisRule = SRule(0, 0, rules[5] * LightFactor, rules[6] * LightFactor, rules[7] == 1);
+  if (genomeType == "fullCount") {
+    AntiPhototaxisExploreRule = SRule(rules[0]* TimeFactor,rules[1],rules[2] * LightFactor, rules[3] * LightFactor, rules[4] == 1);
+    ExplorePhototaxisRule = SRule(rules[5]* TimeFactor,rules[6],rules[7] * LightFactor, rules[8] * LightFactor, rules[9] == 1);
+    PhototaxisAntiphototaxisRule = SRule(rules[10]* TimeFactor,rules[11],rules[12] * LightFactor, rules[13] * LightFactor, rules[14] == 1);
+  } else {
+    AntiPhototaxisExploreRule = SRule(rules[0] * TimeFactor, 0, minLight, maxLight, rules[1] == 1);
+    ExplorePhototaxisRule = SRule(rules[2] * TimeFactor, rules[3], minLight, maxLight, rules[4] == 1);
+    PhototaxisAntiphototaxisRule = SRule(0, 0, rules[5] * LightFactor, rules[6] * LightFactor, rules[7] == 1);
+  }
 }
 
 REGISTER_CONTROLLER(CFootBotConstruction, "footbot_construction_controller")

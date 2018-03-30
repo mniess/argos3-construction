@@ -24,7 +24,7 @@ public class NSGA2PopCode extends AbstractProblem {
         InitArgos();
     }
 
-    public native double LaunchArgos(int[] genome, int evaluations);
+    public native double LaunchArgos(int[] genome, int evaluations, String genomeType);
 
     public native int InitArgos();
 
@@ -33,21 +33,21 @@ public class NSGA2PopCode extends AbstractProblem {
     private AtomicInteger run = new AtomicInteger(0);
 
     public void evaluate(Solution solution) {
-        try{
-
-
-        int[] genome = PopCodeUtilities.getGenome(solution);
-        double fitness = 1;
         try {
-             fitness = LaunchArgos(genome, evaluations);
-        } catch (Exception e) {
-            logger.err("Error with getting results. Writing 1 as Fitness...");
-        }
 
-        double sparsity = PopCodeUtilities.sparsity(genome);
-        solution.setObjective(0, fitness);
-        solution.setObjective(1, -sparsity);
-        System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
+
+            int[] genome = PopCodeUtilities.getGenome(solution);
+            double fitness = 1;
+            try {
+                fitness = LaunchArgos(genome, evaluations, PopCodeUtilities.gType.toString());
+            } catch (Exception e) {
+                logger.err("Error with getting results. Writing 1 as Fitness...");
+            }
+
+            double sparsity = PopCodeUtilities.sparsity(genome);
+            solution.setObjective(0, fitness);
+            solution.setObjective(1, -sparsity);
+            System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
         } catch (Exception e) {
             logger.err(e.getMessage());
         }
@@ -56,6 +56,44 @@ public class NSGA2PopCode extends AbstractProblem {
     public Solution newSolution() {
         Solution solution = new Solution(PopCodeUtilities.GAgenomeSize, 2);
         int counter = 0;
+        switch (PopCodeUtilities.gType) {
+            case SIMPLE:
+                addSimpleGenome(solution,counter);
+                break;
+            case SIMPLECOUNT:
+                counter = addSimpleGenome(solution,counter);
+                addCounts(solution,counter);
+                break;
+            case FULLCOUNT:
+                counter = addFullGenome(solution, counter);
+                addCounts(solution, counter);
+                break;
+        }
+
+        return solution;
+    }
+
+    private int addFullGenome(Solution solution, int counter) {
+        for (int i = 0; i < PopCodeUtilities.numRobots; i++) { //each robot
+            for (int j = 0; j < 3; j++) { // each state
+                solution.setVariable(counter++, EncodingUtils.newBinaryInt(0, 4)); //Time
+                solution.setVariable(counter++, EncodingUtils.newBinaryInt(-1, 1)); //Cylinder in Seen
+                solution.setVariable(counter++, EncodingUtils.newBinaryInt(0, 4)); //LowerBound Light
+                solution.setVariable(counter++, EncodingUtils.newBinaryInt(0, 4)); //UpperBound Light
+                solution.setVariable(counter++, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
+            }
+        }
+        return counter;
+    }
+
+    private int addCounts(Solution solution, int counter) {
+        for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
+            solution.setVariable(counter + i, EncodingUtils.newBinaryInt(0, PopCodeUtilities.numRobots - 1));
+        }
+        return counter;
+    }
+
+    private int addSimpleGenome(Solution solution, int counter) {
         for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
             //AntiPhototaxis -> Explore
             solution.setVariable(counter, EncodingUtils.newBinaryInt(0, 4)); //Time
@@ -70,14 +108,7 @@ public class NSGA2PopCode extends AbstractProblem {
             solution.setVariable(counter + 7, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
             counter += PopCodeUtilities.robGenomeSize;
         }
-        if (PopCodeUtilities.gType == GENOME.SIMPLECOUNT) {
-
-            for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
-                solution.setVariable(counter + i, EncodingUtils.newBinaryInt(0, PopCodeUtilities.numRobots - 1));
-
-            }
-        }
-        return solution;
+        return counter;
     }
 
     private void TestJNI() {
