@@ -3,6 +3,7 @@ package de.uniluebeck.iti.PopCode.MOEA;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 
+import java.awt.*;
 import java.util.Arrays;
 
 public class PopCodeUtilities {
@@ -10,27 +11,28 @@ public class PopCodeUtilities {
     public static GENOME gType = GENOME.FULLCOUNT;
 
     public static int numRobots = 10;
-    public static int robGenomeSize = gType==GENOME.FULLCOUNT? 15 : 8;
+    public static int robGenomeSize = gType == GENOME.FULLCOUNT ? 15 : 8;
 
     public static int PopCodegenomeSize = numRobots * robGenomeSize;
     public static int GAgenomeSize = PopCodegenomeSize + (gType == GENOME.SIMPLE ? 0 : numRobots);
 
 
     public static int[] getGenome(Solution solution) {
+        int[] a = varsToArray(solution);
         switch (gType) {
             case SIMPLE:
-                return varsToArray(solution);
+                return a;
             case SIMPLECOUNT:
-                int[] a = varsToArray(solution);
+            case FULLCOUNT:
                 return combineFromIndex(Arrays.copyOfRange(a, 0, a.length - numRobots), Arrays.copyOfRange(a, a.length - numRobots, a.length));
             default:
+                System.out.println("RETURNING NO GENOME");
                 return null;
         }
     }
 
     /**
-     *
-     * @param values robotgenomes
+     * @param values  robotgenomes
      * @param indices which genomes should be used
      * @return
      */

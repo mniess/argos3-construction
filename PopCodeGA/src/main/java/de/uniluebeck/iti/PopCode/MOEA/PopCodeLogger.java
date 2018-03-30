@@ -4,8 +4,6 @@ import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Population;
 import org.moeaframework.core.PopulationIO;
 import org.moeaframework.core.Solution;
-import org.moeaframework.util.progress.ProgressEvent;
-import org.moeaframework.util.progress.ProgressListener;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -71,7 +69,7 @@ public class PopCodeLogger {
             statsFile = new File(getFileAppendix() + "_stats.txt");
             Writer w = new BufferedWriter(new FileWriter(statsFile, false));
             w.write("StartTime="+new Date().toString()+"\n");
-            w.write("GenomType="+PopCodeUtilities.gType+"\n");
+            w.write("GenomeType="+PopCodeUtilities.gType+"\n");
             w.write("Sim:\n");
             w.write("numRobots="+PopCodeUtilities.numRobots+"\n");
             w.write("robGenomeSize="+PopCodeUtilities.robGenomeSize+"\n");
