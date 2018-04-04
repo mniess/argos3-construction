@@ -43,7 +43,7 @@ public class PopCodeLogger {
                 writer.write(hypervolume + "; ");
                 writer.write(s.getObjective(0) + "; ");
                 writer.write(s.getObjective(1) + "; ");
-                writer.write(Arrays.toString(PopCodeUtilities.varsToArray(s)) + "; ");
+                writer.write(Arrays.toString(PopCodeUtilities.getGenome(s)) + "; ");
                 writer.write("\n");
             }
             writer.flush();
