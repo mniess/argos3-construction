@@ -16,6 +16,7 @@ import java.util.Date;
 public class PopCodeLogger {
     private Writer writer;
     private String identifier = "";
+    private String resultPath = System.getProperty("user.home") + "/ArgosResults/";
     public File checkpointFile;
     private File logFile;
     private File statsFile;
@@ -54,32 +55,32 @@ public class PopCodeLogger {
 
     public void err(String message) {
         try {
-            if(errFile == null || !errFile.exists()) {
+            if (errFile == null || !errFile.exists()) {
                 errFile = new File(getFileAppendix() + "_err.log");
                 errFile.createNewFile();
             }
-            Files.write(Paths.get(getFileAppendix() + "_err.log"),Arrays.asList(message), StandardOpenOption.APPEND);
+            Files.write(Paths.get(getFileAppendix() + "_err.log"), Arrays.asList(message), StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void safeStats(){
+    public void safeStats() {
         try {
             statsFile = new File(getFileAppendix() + "_stats.txt");
             Writer w = new BufferedWriter(new FileWriter(statsFile, false));
-            w.write("StartTime="+new Date().toString()+"\n");
-            w.write("GenomeType="+PopCodeUtilities.gType+"\n");
+            w.write("StartTime=" + new Date().toString() + "\n");
+            w.write("GenomeType=" + PopCodeUtilities.gType + "\n");
             w.write("Sim:\n");
-            w.write("numRobots="+PopCodeUtilities.numRobots+"\n");
-            w.write("robGenomeSize="+PopCodeUtilities.robGenomeSize+"\n");
-            w.write("evaluations="+RunNSGA2PopCode.evaluations+"\n");
+            w.write("numRobots=" + PopCodeUtilities.numRobots + "\n");
+            w.write("robGenomeSize=" + PopCodeUtilities.robGenomeSize + "\n");
+            w.write("evaluations=" + RunNSGA2PopCode.evaluations + "\n");
             w.write("GA:\n");
-            w.write("populationSize="+RunNSGA2PopCode.populationSize+"\n");
-            w.write("elitism="+RunNSGA2PopCode.elitism+"\n");
-            w.write("generations="+RunNSGA2PopCode.generations+"\n");
-            w.write("GAgenomeSize="+PopCodeUtilities.GAgenomeSize+"\n");
-            w.write("PopCodegenomeSize="+PopCodeUtilities.PopCodegenomeSize+"\n");
+            w.write("populationSize=" + RunNSGA2PopCode.populationSize + "\n");
+            w.write("elitism=" + RunNSGA2PopCode.elitism + "\n");
+            w.write("generations=" + RunNSGA2PopCode.generations + "\n");
+            w.write("GAgenomeSize=" + PopCodeUtilities.GAgenomeSize + "\n");
+            w.write("PopCodegenomeSize=" + PopCodeUtilities.PopCodegenomeSize + "\n");
             w.flush();
             w.close();
         } catch (IOException e) {
@@ -92,8 +93,8 @@ public class PopCodeLogger {
 
         //Results
         try {
-            PopulationIO.write(new File(appendix + "_Solutions.dat"), solutions);
-            PopulationIO.writeObjectives(new File(appendix + "_Objectives.dat"), solutions);
+            PopulationIO.write(new File(resultPath + appendix + "_Solutions.dat"), solutions);
+            PopulationIO.writeObjectives(new File(resultPath + appendix + "_Objectives.dat"), solutions);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -115,18 +116,23 @@ public class PopCodeLogger {
     }
 
     public void cleanUp() {
-        if(checkpointFile.exists()){
+        new File(resultPath).mkdirs();
+
+        if (checkpointFile.exists()) {
             checkpointFile.delete();
         }
+
+        moveToResultPath(logFile);
+        moveToResultPath(statsFile);
+        moveToResultPath(errFile);
+
+    }
+
+    private void moveToResultPath(File f) {
         try {
-            if(logFile.exists()){
-                File dst = new File(System.getProperty("user.home")+"/ArgosResults/"+logFile.getName());
-                dst.getParentFile().mkdirs();
-                Files.copy(logFile.toPath(),dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-            if(statsFile.exists()){
-                File dst = new File(System.getProperty("user.home")+"/ArgosResults/"+statsFile.getName());
-                Files.copy(statsFile.toPath(),dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            if (f != null && f.exists()) {
+                File dst = new File(resultPath + f.getName());
+                Files.move(f.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {
             e.printStackTrace();
