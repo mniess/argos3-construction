@@ -37,15 +37,15 @@ public class NSGA2PopCode extends AbstractProblem {
 
 
             int[] genome = PopCodeUtilities.getGenome(solution);
-            double fitness = 1;
+            double fitness = -1;
             try {
                 fitness = LaunchArgos(genome, evaluations, PopCodeUtilities.gType.toString());
             } catch (Exception e) {
                 logger.err("Error with getting results. Writing 1 as Fitness...");
             }
 
-            double sparsity = PopCodeUtilities.sparsity(genome);
-            solution.setObjective(0, fitness);
+            double sparsity = PopCodeUtilities.advancedSparsity(genome);
+            solution.setObjective(0, -fitness);
             solution.setObjective(1, -sparsity);
             System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
         } catch (Exception e) {

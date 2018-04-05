@@ -20,7 +20,7 @@ JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_Launc
   const char *cstrGenomeType = env->GetStringUTFChars(genomeType, 0);
   std::string strGenomeType = std::string(cstrGenomeType);
   env->ReleaseStringUTFChars(genomeType, cstrGenomeType);
-  return -ArgosControl::GetInstance().LaunchArgos(genome, len, evals, strGenomeType);
+  return ArgosControl::GetInstance().LaunchArgos(genome, len, evals, strGenomeType);
 }
 
 JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_InitArgos(JNIEnv *, jobject) {

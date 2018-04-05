@@ -85,6 +85,29 @@ public class PopCodeUtilities {
         for (int i : hist) {
             sparsity += i == 0 ? 1 : 0;
         }
-        return sparsity;
+        return sparsity / numRobots;
+    }
+
+    public static double advancedSparsity(int[] g) {
+        int robotDist = 0;
+        int compares = 0;
+        for (int i = 1; i < numRobots; i++) {
+            int[] currGene = Arrays.copyOfRange(g, (i - 1) * robGenomeSize, i * robGenomeSize);
+            for (int j = i; j < numRobots; j++) {
+                int[] compareGene = Arrays.copyOfRange(g, j * robGenomeSize, (j + 1) * robGenomeSize);
+                robotDist += hammingDistance(currGene, compareGene);
+                compares++;
+            }
+        }
+        int worstcase = compares * robGenomeSize;
+        return 1 - (robotDist / worstcase);
+    }
+
+    private static int hammingDistance(int[] currGene, int[] compareGene) {
+        int distance = 0;
+        for (int i = 0; i < currGene.length; i++) {
+            if (currGene[i] != compareGene[i]) distance++;
+        }
+        return distance;
     }
 }
