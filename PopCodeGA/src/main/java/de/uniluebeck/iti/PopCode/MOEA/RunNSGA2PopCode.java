@@ -48,7 +48,7 @@ public class RunNSGA2PopCode {
 
         Problem problem = new NSGA2PopCode(evaluations,logger);
         double[] idealPoint = {-1, -1};
-        double[] referencePoint = {1, 1};
+        double[] referencePoint = {1, 1}; //some distance from worst case {0,0}
         Hypervolume hypervolume = new Hypervolume(problem, idealPoint,referencePoint);
         Initialization initialization = new RandomInitialization(
                 problem,

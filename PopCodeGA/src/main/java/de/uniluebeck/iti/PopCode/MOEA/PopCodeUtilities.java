@@ -89,7 +89,7 @@ public class PopCodeUtilities {
     }
 
     public static double advancedSparsity(int[] g) {
-        int robotDist = 0;
+        double robotDist = 0;
         int compares = 0;
         for (int i = 1; i < numRobots; i++) {
             int[] currGene = Arrays.copyOfRange(g, (i - 1) * robGenomeSize, i * robGenomeSize);
