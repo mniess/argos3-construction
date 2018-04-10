@@ -1,3 +1,4 @@
+
 *.iml
 *.log
 *.dat
@@ -12,3 +13,4 @@
 */target/*
 scripts/*
 results/*
+BuildingSim/GA.properties
