@@ -16,14 +16,19 @@ import java.util.Date;
 public class PopCodeLogger {
     private Writer writer;
     private String identifier = "";
-    private String resultPath = System.getProperty("user.home") + "/ArgosResults/";
     public File checkpointFile;
     private File logFile;
     private File statsFile;
     private File errFile;
+    private Settings settings;
 
-    PopCodeLogger(String identifier) {
+    PopCodeLogger(String identifier, Settings s) {
         this.identifier = identifier;
+        this.settings = s;
+
+        if (identifier == "") {
+            this.identifier = settings.gType.toString() + settings.generations;
+        }
 
         checkpointFile = new File(getFileAppendix() + "_checkpoint.dat");
         System.out.println((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
@@ -55,6 +60,7 @@ public class PopCodeLogger {
 
     public void err(String message) {
         try {
+            System.err.println(message);
             if (errFile == null || !errFile.exists()) {
                 errFile = new File(getFileAppendix() + "_err.log");
                 errFile.createNewFile();
@@ -70,15 +76,15 @@ public class PopCodeLogger {
             statsFile = new File(getFileAppendix() + "_stats.txt");
             Writer w = new BufferedWriter(new FileWriter(statsFile, false));
             w.write("StartTime=" + new Date().toString() + "\n");
-            w.write("GenomeType=" + PopCodeUtilities.gType + "\n");
+            w.write("GenomeType=" + settings.gType + "\n");
             w.write("Sim:\n");
-            w.write("numRobots=" + PopCodeUtilities.numRobots + "\n");
+            w.write("numRobots=" + settings.numRobots + "\n");
             w.write("robGenomeSize=" + PopCodeUtilities.robGenomeSize + "\n");
-            w.write("evaluations=" + RunNSGA2PopCode.evaluations + "\n");
+            w.write("evaluations=" + settings.evaluations + "\n");
             w.write("GA:\n");
-            w.write("populationSize=" + RunNSGA2PopCode.populationSize + "\n");
-            w.write("elitism=" + RunNSGA2PopCode.elitism + "\n");
-            w.write("generations=" + RunNSGA2PopCode.generations + "\n");
+            w.write("populationSize=" + settings.populationSize + "\n");
+            w.write("elitism=" + settings.elitism + "\n");
+            w.write("generations=" + settings.generations + "\n");
             w.write("GAgenomeSize=" + PopCodeUtilities.GAgenomeSize + "\n");
             w.write("PopCodegenomeSize=" + PopCodeUtilities.PopCodegenomeSize + "\n");
             w.flush();
@@ -93,8 +99,8 @@ public class PopCodeLogger {
 
         //Results
         try {
-            PopulationIO.write(new File(resultPath + appendix + "_Solutions.dat"), solutions);
-            PopulationIO.writeObjectives(new File(resultPath + appendix + "_Objectives.dat"), solutions);
+            PopulationIO.write(new File(settings.resultPath + appendix + "_Solutions.dat"), solutions);
+            PopulationIO.writeObjectives(new File(settings.resultPath + appendix + "_Objectives.dat"), solutions);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -103,7 +109,7 @@ public class PopCodeLogger {
     }
 
     private String getFileAppendix() {
-        return PopCodeUtilities.gType + identifier;
+        return identifier;
     }
 
     public Population loadResults() {
@@ -116,7 +122,7 @@ public class PopCodeLogger {
     }
 
     public void cleanUp() {
-        new File(resultPath).mkdirs();
+        new File(settings.resultPath).mkdirs();
 
         if (checkpointFile.exists()) {
             checkpointFile.delete();
@@ -131,7 +137,7 @@ public class PopCodeLogger {
     private void moveToResultPath(File f) {
         try {
             if (f != null && f.exists()) {
-                File dst = new File(resultPath + f.getName());
+                File dst = new File(settings.resultPath + f.getName());
                 Files.move(f.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {

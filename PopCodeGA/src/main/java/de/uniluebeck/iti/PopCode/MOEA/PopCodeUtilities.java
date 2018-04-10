@@ -8,14 +8,12 @@ import java.util.Arrays;
 
 public class PopCodeUtilities {
 
-    public static GENOME gType = GENOME.FULLCOUNT;
+    private static GENOME gType = RunNSGA2PopCode.settings.gType;
+    private static int numRobots = RunNSGA2PopCode.settings.numRobots;
 
-    public static int numRobots = 10;
     public static int robGenomeSize = gType == GENOME.FULLCOUNT ? 15 : 8;
-
     public static int PopCodegenomeSize = numRobots * robGenomeSize;
     public static int GAgenomeSize = PopCodegenomeSize + (gType == GENOME.SIMPLE ? 0 : numRobots);
-
 
     public static int[] getGenome(Solution solution) {
         int[] a = varsToArray(solution);
@@ -88,7 +86,7 @@ public class PopCodeUtilities {
         return sparsity / numRobots;
     }
 
-    public static double advancedSparsity(int[] g) {
+    public static double hammingSparsity(int[] g) {
         double robotDist = 0;
         int compares = 0;
         for (int i = 1; i < numRobots; i++) {

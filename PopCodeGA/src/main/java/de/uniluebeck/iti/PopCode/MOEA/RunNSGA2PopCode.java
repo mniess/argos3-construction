@@ -16,24 +16,23 @@ import org.moeaframework.core.operator.real.SBX;
 
 public class RunNSGA2PopCode {
 
-    static int populationSize = 100;
-    static int elitism = 2;
-    static int generations = 1000;
-    static int evaluations = 3;
+    public static Settings settings;
 
     public static void main(String[] args) {
+        //Set up
+        settings = new Settings("GA.properties");
         PopCodeLogger logger;
         if (args.length == 1) {
-            logger = new PopCodeLogger("_" + args[0]);
+            logger = new PopCodeLogger(args[0], settings);
         } else {
-            logger = new PopCodeLogger("");
+            logger = new PopCodeLogger("", settings);
         }
-
-        //evalSaved();
         logger.safeStats();
 
-        Population solutions = evaluate(logger);
+        //Run
+        Population solutions = evaluate(logger, settings);
 
+        //Results
         logger.saveResults(solutions);
 
         for (Solution solution : solutions) {
@@ -44,17 +43,17 @@ public class RunNSGA2PopCode {
 
     }
 
-    private static Population evaluate(PopCodeLogger logger) {
+    private static Population evaluate(PopCodeLogger logger, Settings s) {
 
-        Problem problem = new NSGA2PopCode(evaluations,logger);
+        Problem problem = new NSGA2PopCode(s, logger);
         double[] idealPoint = {-1, -1};
         double[] referencePoint = {1, 1}; //some distance from worst case {0,0}
-        Hypervolume hypervolume = new Hypervolume(problem, idealPoint,referencePoint);
+        Hypervolume hypervolume = new Hypervolume(problem, idealPoint, referencePoint);
         Initialization initialization = new RandomInitialization(
                 problem,
-                populationSize);
+                s.populationSize);
 
-        TournamentSelection selection = new TournamentSelection(elitism,
+        TournamentSelection selection = new TournamentSelection(s.elitism,
                 new ChainedComparator(
                         new ParetoDominanceComparator(),
                         new CrowdingComparator()));
@@ -74,7 +73,7 @@ public class RunNSGA2PopCode {
         // Make sure you delete the checkpoints file after a successful run
         algorithm = new Checkpoints(algorithm, logger.checkpointFile, 1);
 
-        while (algorithm.getNumberOfEvaluations() < generations * populationSize) {
+        while (algorithm.getNumberOfEvaluations() < s.generations * s.populationSize) {
             algorithm.step();
             logger.log(algorithm.getNumberOfEvaluations(), algorithm.getResult(), hypervolume.evaluate(algorithm.getResult()));
         }

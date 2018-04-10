@@ -10,17 +10,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NSGA2PopCode extends AbstractProblem {
 
-    int evaluations;
-    PopCodeLogger logger;
+    private PopCodeLogger logger;
+    private Settings settings;
 
     static {
         System.loadLibrary("nsga2_construction"); // Load native library at runtime
     }
 
 
-    public NSGA2PopCode(int evaluations, PopCodeLogger logger) {
+    public NSGA2PopCode(Settings settings, PopCodeLogger logger) {
         super(PopCodeUtilities.GAgenomeSize, 2);
-        this.evaluations = evaluations;
+        this.settings = settings;
         this.logger = logger;
         InitArgos();
     }
@@ -40,12 +40,12 @@ public class NSGA2PopCode extends AbstractProblem {
             int[] genome = PopCodeUtilities.getGenome(solution);
             double fitness = -1;
             try {
-                fitness = LaunchArgos(genome, evaluations, PopCodeUtilities.gType.toString());
+                fitness = LaunchArgos(genome, settings.evaluations, settings.gType.toString());
             } catch (Exception e) {
                 logger.err("Error with getting results. Writing 1 as Fitness...");
             }
 
-            double sparsity = PopCodeUtilities.advancedSparsity(genome);
+            double sparsity = PopCodeUtilities.hammingSparsity(genome);
             solution.setObjective(0, -fitness);
             solution.setObjective(1, -sparsity);
             System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
@@ -57,13 +57,13 @@ public class NSGA2PopCode extends AbstractProblem {
     public Solution newSolution() {
         Solution solution = new Solution(PopCodeUtilities.GAgenomeSize, 2);
         int counter = 0;
-        switch (PopCodeUtilities.gType) {
+        switch (settings.gType) {
             case SIMPLE:
-                addSimpleGenome(solution,counter);
+                addSimpleGenome(solution, counter);
                 break;
             case SIMPLECOUNT:
-                counter = addSimpleGenome(solution,counter);
-                addCounts(solution,counter);
+                counter = addSimpleGenome(solution, counter);
+                addCounts(solution, counter);
                 break;
             case FULLCOUNT:
                 counter = addFullGenome(solution, counter);
@@ -75,7 +75,7 @@ public class NSGA2PopCode extends AbstractProblem {
     }
 
     private int addFullGenome(Solution solution, int counter) {
-        for (int i = 0; i < PopCodeUtilities.numRobots; i++) { //each robot
+        for (int i = 0; i < settings.numRobots; i++) { //each robot
             for (int j = 0; j < 3; j++) { // each state
                 solution.setVariable(counter++, EncodingUtils.newBinaryInt(0, 4)); //Time
                 solution.setVariable(counter++, EncodingUtils.newBinaryInt(-1, 1)); //Cylinder in Seen
@@ -88,14 +88,14 @@ public class NSGA2PopCode extends AbstractProblem {
     }
 
     private int addCounts(Solution solution, int counter) {
-        for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
-            solution.setVariable(counter + i, new BinaryIntegerVariable(0, PopCodeUtilities.numRobots - 1));
+        for (int i = 0; i < settings.numRobots; i++) {
+            solution.setVariable(counter + i, new BinaryIntegerVariable(0, settings.numRobots - 1));
         }
         return counter;
     }
 
     private int addSimpleGenome(Solution solution, int counter) {
-        for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
+        for (int i = 0; i < settings.numRobots; i++) {
             //AntiPhototaxis -> Explore
             solution.setVariable(counter, EncodingUtils.newBinaryInt(0, 4)); //Time
             solution.setVariable(counter + 1, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
