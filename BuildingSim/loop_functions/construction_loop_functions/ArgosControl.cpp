@@ -13,7 +13,7 @@ void ArgosControl::InitArgos() {
   cSimulator.LoadExperiment();
 }
 
-double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std::string genomeType) {
+double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std::string genomeType, int seed) {
 
   static argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
   /* Get a reference to the loop functions */
@@ -26,11 +26,13 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std:
     try {
       cLoopFunctions.SetTrial(i);
 
-      cSimulator.Reset(i);
+      //different setup for every run
+      cSimulator.Reset(seed*evaluations + i);
 
       cSimulator.Execute();
       performance = Min(performance, cLoopFunctions.Performance());
-    } catch(CARGoSException& ex) {}
+    } catch (CARGoSException &ex) {
+    }
   }
   return performance;
 }
@@ -47,7 +49,7 @@ int main(int argc, const char *argv[]) {
   // minTime , Drop, minTime, Cyl, Drop, lowLight, highLight, Drop
   ArgosControl &c = ArgosControl::GetInstance();
   argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
-  cSimulator.SetExperimentFileName("experiments/construction-nsga2.argos");
+  cSimulator.SetExperimentFileName("experiments/construction.argos");
   cSimulator.LoadExperiment();
   int manualGene[80] = {4, 1, 0, 1, 0, 3, 4, 1,
                         4, 1, 0, 1, 0, 3, 4, 1,
@@ -60,28 +62,28 @@ int main(int argc, const char *argv[]) {
                         4, 1, 0, 1, 0, 3, 4, 1,
                         4, 1, 0, 1, 0, 3, 4, 1};
 
-  int fullGene[150] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int fullGene[150] = {3, 1, 4, 0, 1, 1, 0, 0, 2, 1, 4, -1, 0, 3, 1,
+                       2, 0, 1, 3, 1, 2, -1, 0, 4, 0, 0, -1, 1, 4, 1,
+                       2, 0, 2, 2, 1, 3, 0, 1, 3, 0, 2, 1, 4, 3, 1,
+                       1, -1, 4, 1, 1, 2, -1, 2, 3, 1, 2, -1, 3, 3, 0,
+                       2, -1, 3, 1, 1, 3, 0, 0, 2, 1, 3, 1, 4, 1, 1,
+                       1, 0, 0, 0, 1, 4, 1, 3, 2, 0, 3, 0, 3, 4, 0,
+                       1, 0, 0, 0, 1, 4, 1, 3, 2, 0, 3, 0, 3, 4, 0,
+                       2, 0, 2, 2, 1, 3, 0, 1, 3, 0, 2, 1, 4, 3, 1,
+                       1, 1, 4, 3, 1, 3, -1, 1, 3, 0, 2, 1, 2, 2, 0,
+                       1, 0, 0, 0, 1, 4, 1, 3, 2, 0, 3, 0, 3, 4, 0};
 
   //Last 61pc19 --> 0.15
-  int evolvGene[80] = {3, 0, 4, 1, 1, 3, 3, 0,
-                       4, 1, 3, -1, 0, 0, 3, 0,
-                       0, 1, 1, 0, 0, 4, 1, 0,
-                       3, 0, 3, 1, 0, 3, 4, 1,
-                       4, 1, 4, -1, 1, 1, 4, 1,
-                       4, 1, 4, -1, 1, 1, 4, 1,
-                       4, 1, 3, -1, 0, 0, 3, 0,
-                       1, 0, 1, -1, 1, 1, 3, 1,
-                       3, 0, 3, 1, 0, 3, 4, 1,
-                       0, 1, 1, 0, 0, 4, 1, 0};
+  int evolvGene[80] = {3, 1, 0, 1, 0, 1, 0, 1,
+                       1, 0, 2, 0, 1, 2, 1, 1,
+                       3, 1, 0, 1, 0, 1, 0, 1,
+                       0, 0, 4, -1, 0, 1, 4, 0,
+                       2, 0, 1, 0, 1, 4, 3, 1,
+                       4, 0, 3, 1, 0, 3, 4, 1,
+                       4, 0, 3, 1, 0, 3, 4, 1,
+                       2, 0, 2, 1, 1, 2, 1, 0,
+                       0, 1, 3, -1, 0, 0, 1, 1,
+                       2, 0, 1, 0, 1, 4, 3, 1};
 
   int errorGene[80] = {4, 1, 2, 0, 0, 4, 2, 0,
                        1, 0, 0, 0, 0, 4, 4, 0,
@@ -96,7 +98,8 @@ int main(int argc, const char *argv[]) {
   //Set genome
   genome = fullGene;
 
-  std::cout << c.LaunchArgos(genome, 150, 3, "fullCount");
+  std::cout << c.LaunchArgos(genome, 150, 1, "fullCount",0);
+  //std::cout << c.LaunchArgos(genome,80,1,"");
   LOG.Flush();
   //c.DestroyArgos();
 }

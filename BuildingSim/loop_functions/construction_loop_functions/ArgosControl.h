@@ -6,16 +6,16 @@ private:
   ArgosControl() = default;
 
 public:
-  ArgosControl(const ArgosControl&) = delete;
-  ArgosControl& operator=(const ArgosControl&) = delete;
+  ArgosControl(const ArgosControl &) = delete;
+  ArgosControl &operator=(const ArgosControl &) = delete;
 
-  static ArgosControl& GetInstance() {static ArgosControl control; return control; };
+  static ArgosControl &GetInstance() {
+    static ArgosControl control;
+    return control;
+  };
   void InitArgos();
-  double LaunchArgos(int genome[], int length, int i, std::string genomeType);
+  double LaunchArgos(int genome[], int length, int evaluations, std::string genomeType, int seed);
   void DestroyArgos();
-
-private:
-  double Evaluate();
 
 };
 

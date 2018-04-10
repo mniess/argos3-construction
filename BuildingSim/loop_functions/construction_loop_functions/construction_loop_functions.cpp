@@ -80,7 +80,8 @@ void CConstructionLoopFunctions::PostExperiment() {
 CColor CConstructionLoopFunctions::GetFloorColor(const CVector2 &c_position_on_plane) {
   if (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(c_position_on_plane.Length()))
     return CColor::YELLOW;
-  if(c_position_on_plane.GetX() > 3.5 && c_position_on_plane.GetX() < 4 && c_position_on_plane.GetY() > 2.5 && c_position_on_plane.GetY() < 3) {
+  if (c_position_on_plane.GetX() > 3.5 && c_position_on_plane.GetX() < 4 && c_position_on_plane.GetY() > 2.5
+      && c_position_on_plane.GetY() < 3) {
     return CColor::RED;
   }
   return CColor::WHITE;
@@ -121,7 +122,7 @@ void CConstructionLoopFunctions::PreStep() {
 void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, std::string genomeType) {
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   int singleGenomeLength = 8;
-  if(genomeType == "fullCount") {
+  if (genomeType == "fullCount") {
     singleGenomeLength = 15;
   }
   if (tFBMap.size() * singleGenomeLength == length) {
@@ -131,10 +132,11 @@ void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, s
       CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it.second);
       CFootBotConstruction
           *currController = &dynamic_cast<CFootBotConstruction &>(pcFB->GetControllableEntity().GetController());
-      currController->SetRules(genome + (i++ * singleGenomeLength),genomeType);
+      currController->SetRules(genome + (i++ * singleGenomeLength), genomeType);
     }
   } else {
-    LOGERR << "Genome does not have correct length! is: " << length << " should be: " <<  tFBMap.size() * singleGenomeLength << std::endl;
+    LOGERR << "Genome does not have correct length! is: " << length << " should be: "
+           << tFBMap.size() * singleGenomeLength << std::endl;
   }
 
 }

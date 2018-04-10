@@ -25,7 +25,7 @@ public class NSGA2PopCode extends AbstractProblem {
         InitArgos();
     }
 
-    public native double LaunchArgos(int[] genome, int evaluations, String genomeType);
+    public native double LaunchArgos(int[] genome, int evaluations, String genomeType, int seed);
 
     public native int InitArgos();
 
@@ -35,12 +35,10 @@ public class NSGA2PopCode extends AbstractProblem {
 
     public void evaluate(Solution solution) {
         try {
-
-
             int[] genome = PopCodeUtilities.getGenome(solution);
             double fitness = -1;
             try {
-                fitness = LaunchArgos(genome, settings.evaluations, settings.gType.toString());
+                fitness = LaunchArgos(genome, settings.evaluations, settings.gType.toString(), run.get());
             } catch (Exception e) {
                 logger.err("Error with getting results. Writing 1 as Fitness...");
             }
