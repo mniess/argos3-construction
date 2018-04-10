@@ -1,6 +1,7 @@
 package de.uniluebeck.iti.PopCode.MOEA;
 
 import org.moeaframework.core.Solution;
+import org.moeaframework.core.variable.BinaryIntegerVariable;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
@@ -9,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NSGA2PopCode extends AbstractProblem {
 
-    int evaluations = 3;
+    int evaluations;
     PopCodeLogger logger;
 
     static {
@@ -88,7 +89,7 @@ public class NSGA2PopCode extends AbstractProblem {
 
     private int addCounts(Solution solution, int counter) {
         for (int i = 0; i < PopCodeUtilities.numRobots; i++) {
-            solution.setVariable(counter + i, EncodingUtils.newBinaryInt(0, PopCodeUtilities.numRobots - 1));
+            solution.setVariable(counter + i, new BinaryIntegerVariable(0, PopCodeUtilities.numRobots - 1));
         }
         return counter;
     }
