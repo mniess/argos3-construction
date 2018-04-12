@@ -3,19 +3,23 @@ package de.uniluebeck.iti.PopCode.MOEA;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 
-import java.awt.*;
 import java.util.Arrays;
 
-public class PopCodeUtilities {
+class Utilities {
 
-    private static GENOME gType = RunNSGA2PopCode.settings.gType;
-    private static int numRobots = RunNSGA2PopCode.settings.numRobots;
+    private static GENOME gType = Run.settings.gType;
+    private static int numRobots = Run.settings.numRobots;
 
-    public static int robGenomeSize = gType == GENOME.FULLCOUNT ? 15 : 8;
-    public static int PopCodegenomeSize = numRobots * robGenomeSize;
-    public static int GAgenomeSize = PopCodegenomeSize + (gType == GENOME.SIMPLE ? 0 : numRobots);
+    static int robGenomeSize = gType == GENOME.FULLCOUNT ? 15 : 8;
+    static int PopCodegenomeSize = numRobots * robGenomeSize;
+    static int GAgenomeSize = PopCodegenomeSize + (gType == GENOME.SIMPLE ? 0 : numRobots);
 
-    public static int[] getGenome(Solution solution) {
+    /**
+     * Create the genome used in the simulation from MOEA solution
+     * @param solution
+     * @return the genome used in the simulation
+     */
+    static int[] getGenome(Solution solution) {
         int[] a = varsToArray(solution);
         switch (gType) {
             case SIMPLE:
@@ -43,7 +47,13 @@ public class PopCodeUtilities {
         return genome;
     }
 
-    public static int[] varsToArray(Solution solution) {
+    /**
+     * Convert Solution to array of variables.
+     * Cannot extract directly
+     * @param solution
+     * @return array of variables in solution
+     */
+    static int[] varsToArray(Solution solution) {
         int[] array = new int[solution.getNumberOfVariables()];
         for (int i = 0; i < solution.getNumberOfVariables(); i++) {
             try {
@@ -56,7 +66,11 @@ public class PopCodeUtilities {
         return array;
     }
 
-
+    /**
+     * Sum up equal robot genes in genome
+     * @param genome
+     * @return
+     */
     private static int[] typeHistogram(int[] genome) {
         int[] hist = new int[numRobots];
         int[][] robGenomes = new int[numRobots][robGenomeSize];
@@ -76,7 +90,12 @@ public class PopCodeUtilities {
         return hist;
     }
 
-    public static double sparsity(int[] genome) {
+    /**
+     * Simple l0 Sparsity meassure
+     * @param genome
+     * @return
+     */
+    static double sparsity(int[] genome) {
         int[] hist = typeHistogram(genome);
         //l0 measure (count zeros)
         double sparsity = 0;
@@ -86,7 +105,12 @@ public class PopCodeUtilities {
         return sparsity / numRobots;
     }
 
-    public static double hammingSparsity(int[] g) {
+    /**
+     * Use Hamming distance between every gene in genome for sparsity
+     * @param g
+     * @return
+     */
+    static double hammingSparsity(int[] g) {
         double robotDist = 0;
         int compares = 0;
         for (int i = 1; i < numRobots; i++) {

@@ -13,23 +13,20 @@ import org.moeaframework.core.operator.OnePointCrossover;
 import org.moeaframework.core.operator.RandomInitialization;
 import org.moeaframework.core.operator.TournamentSelection;
 import org.moeaframework.core.operator.binary.BitFlip;
-import org.moeaframework.core.operator.binary.HUX;
-import org.moeaframework.core.operator.real.PM;
-import org.moeaframework.core.operator.real.SBX;
 
-public class RunNSGA2PopCode {
+public class Run {
 
-    public static Settings settings;
+    static Settings settings;
 
     public static void main(String[] args) {
         //Set up
         settings = new Settings("GA.properties");
         settings.print();
-        PopCodeLogger logger;
+        Logger logger;
         if (args.length == 1) {
-            logger = new PopCodeLogger(args[0], settings);
+            logger = new Logger(args[0]);
         } else {
-            logger = new PopCodeLogger("", settings);
+            logger = new Logger();
         }
         logger.safeStats();
 
@@ -47,12 +44,18 @@ public class RunNSGA2PopCode {
 
     }
 
-    private static Population evaluate(PopCodeLogger logger, Settings s) {
+    /*
+     * Setup and run the GeneticAlgorithm
+     */
+    private static Population evaluate(Logger logger, Settings s) {
 
-        Problem problem = new NSGA2PopCode(s, logger);
+        Problem problem = new PopCode(s, logger);
+
+        //Create HyperVolume
         double[] idealPoint = {-1, -1};
         double[] referencePoint = {1, 1}; //some distance from worst case {0,0}
         Hypervolume hypervolume = new Hypervolume(problem, idealPoint, referencePoint);
+
         Initialization initialization = new RandomInitialization(
                 problem,
                 s.populationSize);
@@ -76,22 +79,25 @@ public class RunNSGA2PopCode {
                 variation,
                 initialization);
 
-        // Make sure you delete the checkpoints file after a successful run
+        //Create checkpointfile, it will be deleted at the end of the run by logger.cleanup();
         algorithm = new Checkpoints(algorithm, logger.checkpointFile, 1);
 
+        //run
         while (algorithm.getNumberOfEvaluations() < s.generations * s.populationSize) {
             algorithm.step();
             logger.log(algorithm.getNumberOfEvaluations(), algorithm.getResult(), hypervolume.evaluate(algorithm.getResult()));
         }
+
         logger.cleanUp();
         return algorithm.getResult();
     }
 
-    private static void evalSaved(PopCodeLogger logger) {
+    private static void evalSaved(Logger logger) {
         Population pop = logger.loadResults();
         plot(pop);
     }
 
+    //Use MOEA Plot function for instant visualization
     private static void plot(Population solutions) {
         if (solutions != null) {
             new Plot()

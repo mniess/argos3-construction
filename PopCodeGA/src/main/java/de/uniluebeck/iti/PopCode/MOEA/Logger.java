@@ -11,30 +11,36 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 
-public class PopCodeLogger {
+class Logger {
     private Writer writer;
     private String identifier = "";
-    public File checkpointFile;
+    File checkpointFile;
     private File logFile;
     private File statsFile;
     private File errFile;
     private Settings settings;
 
-    PopCodeLogger(String identifier, Settings s) {
-        this.identifier = identifier;
-        this.settings = s;
 
-        if (identifier == "") {
+    Logger() {
+        this(null);
+    }
+
+    Logger(String identifier) {
+        this.identifier = identifier;
+        this.settings = Run.settings;
+
+        //Generate identifier if none is given
+        if (identifier == null || identifier.equals("")) {
             this.identifier = settings.gType.toString() + settings.generations;
         }
 
-        checkpointFile = new File(getFileAppendix() + "_checkpoint.dat");
-        System.out.println((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
-
         try {
-            logFile = new File(getFileAppendix() + "_log.csv");
+            checkpointFile = new File(identifier + "_checkpoint.dat");
+            System.out.println((checkpointFile.exists() ? "Using existing" : "NEW") + " checkpointfile: " + checkpointFile.getName());
+            logFile = new File(identifier + "_log.csv");
             writer = new BufferedWriter(new FileWriter(logFile, checkpointFile.exists()));
         } catch (IOException e) {
             e.printStackTrace();
@@ -42,14 +48,21 @@ public class PopCodeLogger {
 
     }
 
-    public void log(int nfe, NondominatedPopulation solutions, double hypervolume) {
+    /**
+     * Log current performance of Algorithm including current solution
+     *
+     * @param nfe         Current evaluation (number of evaluations)
+     * @param solutions   current pareto front
+     * @param hypervolume current hypervolume of solutions
+     */
+    void log(int nfe, NondominatedPopulation solutions, double hypervolume) {
         try {
             for (Solution s : solutions) {
                 writer.write(nfe + "; ");
                 writer.write(hypervolume + "; ");
                 writer.write(s.getObjective(0) + "; ");
                 writer.write(s.getObjective(1) + "; ");
-                writer.write(Arrays.toString(PopCodeUtilities.getGenome(s)) + "; ");
+                writer.write(Arrays.toString(Utilities.getGenome(s)) + "; ");
                 writer.write("\n");
             }
             writer.flush();
@@ -58,28 +71,36 @@ public class PopCodeLogger {
         }
     }
 
-    public void err(String message) {
+    /**
+     * Write to error log. File is only created, if method called
+     *
+     * @param message error line
+     */
+    void err(String message) {
         try {
             System.err.println(message);
             if (errFile == null || !errFile.exists()) {
-                errFile = new File(getFileAppendix() + "_err.log");
+                errFile = new File(identifier + "_err.log");
                 errFile.createNewFile();
             }
-            Files.write(Paths.get(getFileAppendix() + "_err.log"), Arrays.asList(message), StandardOpenOption.APPEND);
+            Files.write(Paths.get(identifier + "_err.log"), Collections.singletonList(message), StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void safeStats() {
+    /**
+     * Write some info about the current run into a stats file
+     */
+    void safeStats() {
         try {
-            statsFile = new File(getFileAppendix() + "_stats.txt");
+            statsFile = new File(identifier + "_stats.txt");
             Writer w = new BufferedWriter(new FileWriter(statsFile, false));
             w.write("StartTime=" + new Date().toString() + "\n");
             w.write("GenomeType=" + settings.gType + "\n");
             w.write("Sim:\n");
             w.write("numRobots=" + settings.numRobots + "\n");
-            w.write("robGenomeSize=" + PopCodeUtilities.robGenomeSize + "\n");
+            w.write("robGenomeSize=" + Utilities.robGenomeSize + "\n");
             w.write("evaluations=" + settings.evaluations + "\n");
             w.write("GA:\n");
             w.write("populationSize=" + settings.populationSize + "\n");
@@ -87,9 +108,8 @@ public class PopCodeLogger {
             w.write("tournamentSize=" + settings.tournamentSize + "\n");
             w.write("crossoverProb=" + settings.crossoverProb + "\n");
             w.write("mutationProb=" + settings.mutationProb + "\n");
-
-            w.write("GAgenomeSize=" + PopCodeUtilities.GAgenomeSize + "\n");
-            w.write("PopCodegenomeSize=" + PopCodeUtilities.PopCodegenomeSize + "\n");
+            w.write("GAgenomeSize=" + Utilities.GAgenomeSize + "\n");
+            w.write("PopCodegenomeSize=" + Utilities.PopCodegenomeSize + "\n");
             w.flush();
             w.close();
         } catch (IOException e) {
@@ -97,13 +117,16 @@ public class PopCodeLogger {
         }
     }
 
-    public void saveResults(Population solutions) {
-        String appendix = getFileAppendix();
-
+    /**
+     * Use MOEA function to safe the final solutions of the pareto front
+     *
+     * @param solutions
+     */
+    void saveResults(Population solutions) {
         //Results
         try {
-            PopulationIO.write(new File(settings.resultPath + appendix + "_Solutions.dat"), solutions);
-            PopulationIO.writeObjectives(new File(settings.resultPath + appendix + "_Objectives.dat"), solutions);
+            PopulationIO.write(new File(settings.resultPath + identifier + "_Solutions.dat"), solutions);
+            PopulationIO.writeObjectives(new File(settings.resultPath + identifier + "_Objectives.dat"), solutions);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -111,20 +134,16 @@ public class PopCodeLogger {
         System.out.println("Saved " + solutions.size() + " solutions!");
     }
 
-    private String getFileAppendix() {
-        return identifier;
-    }
-
-    public Population loadResults() {
+    Population loadResults() {
         try {
-            return PopulationIO.read(new File(getFileAppendix() + "_Solutions.dat"));
+            return PopulationIO.read(new File(identifier + "_Solutions.dat"));
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public void cleanUp() {
+    void cleanUp() {
         new File(settings.resultPath).mkdirs();
 
         if (checkpointFile.exists()) {

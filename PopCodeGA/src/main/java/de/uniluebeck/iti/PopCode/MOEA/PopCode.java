@@ -5,55 +5,68 @@ import org.moeaframework.core.variable.BinaryIntegerVariable;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class NSGA2PopCode extends AbstractProblem {
+public class PopCode extends AbstractProblem {
 
-    private PopCodeLogger logger;
+    private Logger logger;
     private Settings settings;
 
     static {
-        System.loadLibrary("nsga2_construction"); // Load native library at runtime
+        System.loadLibrary("nsga2_construction"); // Load native library
     }
 
 
-    public NSGA2PopCode(Settings settings, PopCodeLogger logger) {
-        super(PopCodeUtilities.GAgenomeSize, 2);
+    public PopCode(Settings settings, Logger logger) {
+        super(Utilities.GAgenomeSize, 2);
         this.settings = settings;
         this.logger = logger;
         InitArgos();
     }
 
-    public native double LaunchArgos(int[] genome, int evaluations, String genomeType, int seed);
+    native double LaunchArgos(int[] genome, int evaluations, String genomeType, int seed);
 
-    public native int InitArgos();
+    native int InitArgos();
 
-    public native int DestroyArgos();
+    native int DestroyArgos();
 
+    //Evaluation counter for logging purposes
     private AtomicInteger run = new AtomicInteger(0);
 
+    /**
+     * Run the simulation with given solution
+     *
+     * @param solution contains DNA
+     */
     public void evaluate(Solution solution) {
         try {
-            int[] genome = PopCodeUtilities.getGenome(solution);
+            //Create RNA from DNA
+            int[] genome = Utilities.getGenome(solution);
             double fitness = -1;
             try {
                 fitness = LaunchArgos(genome, settings.evaluations, settings.gType.toString(), run.get());
             } catch (Exception e) {
-                logger.err("Error with getting results. Writing 1 as Fitness...");
+                logger.err("Error with getting results in evaluation " + run.get() + ". Writing " + fitness + " as Fitness...");
             }
-
-            double sparsity = PopCodeUtilities.hammingSparsity(genome);
+            //Calc sparsity
+            double sparsity = Utilities.hammingSparsity(genome);
+            //Set it
             solution.setObjective(0, -fitness);
             solution.setObjective(1, -sparsity);
+
             System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
         } catch (Exception e) {
             logger.err(e.getMessage());
         }
     }
 
+    /*
+     * Create a new Solution depending on the selected GENOME, all Variables are BINARY! Choose selection&variation accordingly
+     */
     public Solution newSolution() {
-        Solution solution = new Solution(PopCodeUtilities.GAgenomeSize, 2);
+        Solution solution = new Solution(Utilities.GAgenomeSize, 2);
         int counter = 0;
         switch (settings.gType) {
             case SIMPLE:
@@ -105,16 +118,9 @@ public class NSGA2PopCode extends AbstractProblem {
             solution.setVariable(counter + 5, EncodingUtils.newBinaryInt(0, 4)); //LowerBound Light
             solution.setVariable(counter + 6, EncodingUtils.newBinaryInt(0, 4)); //UpperBound Light
             solution.setVariable(counter + 7, EncodingUtils.newBinaryInt(0, 1)); //Drop/Pickup
-            counter += PopCodeUtilities.robGenomeSize;
+            counter += Utilities.robGenomeSize;
         }
         return counter;
-    }
-
-    private void TestJNI() {
-        InitArgos();
-//        LaunchArgos();
-//        LaunchArgos();
-        DestroyArgos();
     }
 
     @Override

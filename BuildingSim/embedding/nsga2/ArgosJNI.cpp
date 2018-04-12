@@ -3,9 +3,9 @@
 #include <argos3/core/simulator/simulator.h>
 #include <loop_functions/construction_loop_functions/ArgosControl.h>
 
-#include <de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode.h>
+#include <de_uniluebeck_iti_PopCode_MOEA_PopCode.h>
 
-JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_LaunchArgos(JNIEnv *env,
+JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_LaunchArgos(JNIEnv *env,
                                                                                        jobject,
                                                                                        jintArray p_array,
                                                                                        jint evals,
@@ -24,12 +24,12 @@ JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_Launc
   return ArgosControl::GetInstance().LaunchArgos(genome, len, evals, strGenomeType, seed);
 }
 
-JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_InitArgos(JNIEnv *, jobject) {
+JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_InitArgos(JNIEnv *, jobject) {
   ArgosControl::GetInstance().InitArgos();
   return 0;
 }
 
-JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_NSGA2PopCode_DestroyArgos(JNIEnv *, jobject) {
+JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_DestroyArgos(JNIEnv *, jobject) {
   ArgosControl::GetInstance().DestroyArgos();
   return 0;
 }

@@ -36,7 +36,7 @@
                                     <arg value="${runtime_classpath}"/>
                                     <arg value="-d"/>
                                     <arg value="${basedir}/../BuildingSim/embedding/nsga2"/>
-                                    <arg value="de.uniluebeck.iti.PopCode.MOEA.NSGA2PopCode"/>
+                                    <arg value="de.uniluebeck.iti.PopCode.MOEA.PopCode"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -51,7 +51,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>de.uniluebeck.iti.PopCode.MOEA.RunNSGA2PopCode</mainClass>
+                            <mainClass>de.uniluebeck.iti.PopCode.MOEA.Run
                         </manifest>
                     </archive>
                 </configuration>
@@ -62,7 +62,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>de.uniluebeck.iti.PopCode.MOEA.RunNSGA2PopCode</mainClass>
+                            <mainClass>de.uniluebeck.iti.PopCode.MOEA.Run</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

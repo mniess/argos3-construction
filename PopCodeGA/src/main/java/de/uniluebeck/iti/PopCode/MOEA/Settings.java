@@ -3,35 +3,38 @@ package de.uniluebeck.iti.PopCode.MOEA;
 import java.io.*;
 import java.util.Properties;
 
+/**
+ * Settings reader using java Properties.
+ * Read variables once and safe them to final variables to protect them from changes
+ */
 class Settings {
     // Number of robots in each simulation
     //TODO migrate to Buildingsim experiment files
-    final protected int numRobots;
+    final int numRobots;
 
     //Number of simulations in each generation
-    final protected int populationSize;
+    final int populationSize;
     // Generations
-    final protected int generations;
+    final int generations;
     // Number of evaluations per simulation
-    final protected int evaluations;
+    final int evaluations;
 
     // From how many simulations the best is chosen for selection
-    final protected int tournamentSize;
+    final int tournamentSize;
     // crossover probability
-    final protected double crossoverProb;
+    final double crossoverProb;
     // mustatuin probaiblity
-    final protected double mutationProb;
+    final double mutationProb;
 
     // Which GENOME to use
-    final protected GENOME gType;
+    final GENOME gType;
     // Write finished log etc to this
-    final protected String resultPath;
-
-    private Properties prop = new Properties();
+    final String resultPath;
 
     Settings(String filename) {
         InputStream input = null;
 
+        Properties prop = new Properties();
         try {
             input = new FileInputStream(filename);
             prop.load(input);
@@ -60,6 +63,9 @@ class Settings {
         resultPath = (String) prop.getOrDefault("resultPath", System.getProperty("user.home") + "/ArgosResults/");
     }
 
+    /**
+     * Output all settings to std::out
+     */
     void print() {
         System.out.print("numRobots=" + numRobots +
                 "\nPopulationSize=" + populationSize +

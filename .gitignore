@@ -3,6 +3,7 @@
 *.log
 *.dat
 *.csv
+*.txt
 
 *vgcore*
 
@@ -13,4 +14,5 @@
 */target/*
 scripts/*
 results/*
+*.argos
 BuildingSim/GA.properties
