@@ -83,8 +83,11 @@ public class PopCodeLogger {
             w.write("evaluations=" + settings.evaluations + "\n");
             w.write("GA:\n");
             w.write("populationSize=" + settings.populationSize + "\n");
-            w.write("tournamentSize=" + settings.tournamentSize + "\n");
             w.write("generations=" + settings.generations + "\n");
+            w.write("tournamentSize=" + settings.tournamentSize + "\n");
+            w.write("crossoverProb=" + settings.crossoverProb + "\n");
+            w.write("mutationProb=" + settings.mutationProb + "\n");
+
             w.write("GAgenomeSize=" + PopCodeUtilities.GAgenomeSize + "\n");
             w.write("PopCodegenomeSize=" + PopCodeUtilities.PopCodegenomeSize + "\n");
             w.flush();

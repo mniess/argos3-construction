@@ -54,7 +54,7 @@ class Settings {
 
         tournamentSize = Integer.parseInt((String) prop.getOrDefault("tournamentSize", "2"));
         crossoverProb = Double.parseDouble((String) prop.getOrDefault("crossoverProb", "1"));
-        mutationProb = Double.parseDouble((String) prop.getOrDefault("mutationProb", "0.1"));
+        mutationProb = Double.parseDouble((String) prop.getOrDefault("mutationProb", "0.01"));
 
         gType = GENOME.valueOf((String) prop.getOrDefault("gType", "FULLCOUNT"));
         resultPath = (String) prop.getOrDefault("resultPath", System.getProperty("user.home") + "/ArgosResults/");
