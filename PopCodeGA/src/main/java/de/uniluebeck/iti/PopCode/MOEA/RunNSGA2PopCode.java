@@ -11,6 +11,8 @@ import org.moeaframework.core.indicator.Hypervolume;
 import org.moeaframework.core.operator.GAVariation;
 import org.moeaframework.core.operator.RandomInitialization;
 import org.moeaframework.core.operator.TournamentSelection;
+import org.moeaframework.core.operator.binary.BitFlip;
+import org.moeaframework.core.operator.binary.HUX;
 import org.moeaframework.core.operator.real.PM;
 import org.moeaframework.core.operator.real.SBX;
 
@@ -53,14 +55,16 @@ public class RunNSGA2PopCode {
                 problem,
                 s.populationSize);
 
-        TournamentSelection selection = new TournamentSelection(s.elitism,
+        TournamentSelection selection = new TournamentSelection(s.tournamentSize,
                 new ChainedComparator(
-                        new ParetoDominanceComparator(),
-                        new CrowdingComparator()));
+                        new ParetoDominanceComparator(), //Try first
+                        new CrowdingComparator()));     // Backup
 
         Variation variation = new GAVariation(
-                new SBX(1.0, 25.0),
-                new PM(1.0 / problem.getNumberOfVariables(), 30.0));
+                new HUX(1.0),
+                new BitFlip(0.01));
+                //new SBX(1.0, 25.0),
+                //new PM(1.0 / problem.getNumberOfVariables(), 30.0));
 
         Algorithm algorithm = new NSGAII(
                 problem,

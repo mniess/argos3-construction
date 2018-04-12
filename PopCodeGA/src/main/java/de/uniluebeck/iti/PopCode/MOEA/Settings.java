@@ -6,7 +6,7 @@ import java.util.Properties;
 class Settings {
 
     final protected int populationSize;
-    final protected int elitism;
+    final protected int tournamentSize;
     final protected int generations;
     final protected int evaluations;
     final protected int numRobots;
@@ -34,7 +34,7 @@ class Settings {
         }
 
         populationSize = Integer.parseInt((String) prop.getOrDefault("populationSize", "100"));
-        elitism = Integer.parseInt((String) prop.getOrDefault("elitism", "2"));
+        tournamentSize = Integer.parseInt((String) prop.getOrDefault("tournamentSize", "2"));
         generations = Integer.parseInt((String) prop.getOrDefault("generations", "1000"));
         evaluations = Integer.parseInt((String) prop.getOrDefault("evaluations", "3"));
         numRobots = Integer.parseInt((String) prop.getOrDefault("numRobots", "10"));
@@ -44,6 +44,6 @@ class Settings {
     }
 
     void print() {
-        System.out.printf("PopulationSize=%d\nelitism=%d\ngenerations=%d\nevaluations=%d\nnumRobots=%d\ngType=%s\nresultPath=%s\n", populationSize, elitism, generations, evaluations, numRobots, gType, resultPath);
+        System.out.printf("PopulationSize=%d\ntournamentSize=%d\ngenerations=%d\nevaluations=%d\nnumRobots=%d\ngType=%s\nresultPath=%s\n", populationSize, tournamentSize, generations, evaluations, numRobots, gType, resultPath);
     }
 }
