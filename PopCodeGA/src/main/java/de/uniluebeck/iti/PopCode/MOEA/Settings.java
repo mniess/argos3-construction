@@ -4,13 +4,27 @@ import java.io.*;
 import java.util.Properties;
 
 class Settings {
-
-    final protected int populationSize;
-    final protected int tournamentSize;
-    final protected int generations;
-    final protected int evaluations;
+    // Number of robots in each simulation
+    //TODO migrate to Buildingsim experiment files
     final protected int numRobots;
+
+    //Number of simulations in each generation
+    final protected int populationSize;
+    // Generations
+    final protected int generations;
+    // Number of evaluations per simulation
+    final protected int evaluations;
+
+    // From how many simulations the best is chosen for selection
+    final protected int tournamentSize;
+    // crossover probability
+    final protected double crossoverProb;
+    // mustatuin probaiblity
+    final protected double mutationProb;
+
+    // Which GENOME to use
     final protected GENOME gType;
+    // Write finished log etc to this
     final protected String resultPath;
 
     private Properties prop = new Properties();
@@ -33,17 +47,29 @@ class Settings {
             }
         }
 
+        numRobots = Integer.parseInt((String) prop.getOrDefault("numRobots", "10"));
         populationSize = Integer.parseInt((String) prop.getOrDefault("populationSize", "100"));
-        tournamentSize = Integer.parseInt((String) prop.getOrDefault("tournamentSize", "2"));
         generations = Integer.parseInt((String) prop.getOrDefault("generations", "1000"));
         evaluations = Integer.parseInt((String) prop.getOrDefault("evaluations", "3"));
-        numRobots = Integer.parseInt((String) prop.getOrDefault("numRobots", "10"));
+
+        tournamentSize = Integer.parseInt((String) prop.getOrDefault("tournamentSize", "2"));
+        crossoverProb = Double.parseDouble((String) prop.getOrDefault("crossoverProb", "1"));
+        mutationProb = Double.parseDouble((String) prop.getOrDefault("mutationProb", "0.1"));
+
         gType = GENOME.valueOf((String) prop.getOrDefault("gType", "FULLCOUNT"));
         resultPath = (String) prop.getOrDefault("resultPath", System.getProperty("user.home") + "/ArgosResults/");
-
     }
 
     void print() {
-        System.out.printf("PopulationSize=%d\ntournamentSize=%d\ngenerations=%d\nevaluations=%d\nnumRobots=%d\ngType=%s\nresultPath=%s\n", populationSize, tournamentSize, generations, evaluations, numRobots, gType, resultPath);
+        System.out.print("numRobots=" + numRobots +
+                "\nPopulationSize=" + populationSize +
+                "\ngenerations=" + generations +
+                "\nevaluations=" + evaluations +
+                "\ntournamentSize=" + tournamentSize +
+                "\ncrossoverProb=" + crossoverProb +
+                "\nmutationProb=" + mutationProb +
+                "\ngType=" + gType +
+                "\nresultPath=" + resultPath +
+                "\n");
     }
 }

@@ -9,6 +9,7 @@ import org.moeaframework.core.comparator.CrowdingComparator;
 import org.moeaframework.core.comparator.ParetoDominanceComparator;
 import org.moeaframework.core.indicator.Hypervolume;
 import org.moeaframework.core.operator.GAVariation;
+import org.moeaframework.core.operator.OnePointCrossover;
 import org.moeaframework.core.operator.RandomInitialization;
 import org.moeaframework.core.operator.TournamentSelection;
 import org.moeaframework.core.operator.binary.BitFlip;
@@ -23,6 +24,7 @@ public class RunNSGA2PopCode {
     public static void main(String[] args) {
         //Set up
         settings = new Settings("GA.properties");
+        settings.print();
         PopCodeLogger logger;
         if (args.length == 1) {
             logger = new PopCodeLogger(args[0], settings);
@@ -61,8 +63,8 @@ public class RunNSGA2PopCode {
                         new CrowdingComparator()));     // Backup
 
         Variation variation = new GAVariation(
-                new HUX(1.0),
-                new BitFlip(0.01));
+                new OnePointCrossover(s.crossoverProb),
+                new BitFlip(s.mutationProb));
                 //new SBX(1.0, 25.0),
                 //new PM(1.0 / problem.getNumberOfVariables(), 30.0));
 
