@@ -7,12 +7,17 @@ package de.uniluebeck.iti.PopCode.MOEA;
  * Count indicates that the robots are selected by extra variables
  */
 public enum GENOME {
-    SIMPLE("simple"), SIMPLECOUNT("simpleCount"), FULLCOUNT("fullCount");
+    SIMPLE("simple", false),
+    SIMPLECOUNT("simpleCount", true),
+    FULLCOUNT("fullCount", true),
+    FULL("full", false);
 
     private final String desc;
+    protected final boolean hasCount;
 
-    GENOME(final String text) {
+    GENOME(final String text, final boolean hasCount) {
         this.desc = text;
+        this.hasCount = hasCount;
     }
 
     @Override

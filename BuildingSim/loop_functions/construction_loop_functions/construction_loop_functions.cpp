@@ -4,6 +4,7 @@
 #include <argos3/plugins/simulator/entities/cylinder_entity.h>
 
 #include <list>
+#include <string>
 #include <controllers/footbot_construction/footbot_construction.h>
 
 /****************************************/
@@ -122,7 +123,7 @@ void CConstructionLoopFunctions::PreStep() {
 void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, std::string genomeType) {
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   int singleGenomeLength = 8;
-  if (genomeType == "fullCount") {
+  if (genomeType.find("full") != std::string::npos) {
     singleGenomeLength = 15;
   }
   if (tFBMap.size() * singleGenomeLength == length) {

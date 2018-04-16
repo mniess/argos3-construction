@@ -10,12 +10,13 @@ class Utilities {
     private static GENOME gType = Run.settings.gType;
     private static int numRobots = Run.settings.numRobots;
 
-    static int robGenomeSize = gType == GENOME.FULLCOUNT ? 15 : 8;
+    static int robGenomeSize = (gType == GENOME.FULLCOUNT || gType == GENOME.FULL) ? 15 : 8;
     static int PopCodegenomeSize = numRobots * robGenomeSize;
-    static int GAgenomeSize = PopCodegenomeSize + (gType == GENOME.SIMPLE ? 0 : numRobots);
+    static int GAgenomeSize = PopCodegenomeSize + (gType.hasCount ? numRobots : 0);
 
     /**
      * Create the genome used in the simulation from MOEA solution
+     *
      * @param solution
      * @return the genome used in the simulation
      */
@@ -23,6 +24,7 @@ class Utilities {
         int[] a = varsToArray(solution);
         switch (gType) {
             case SIMPLE:
+            case FULL:
                 return a;
             case SIMPLECOUNT:
             case FULLCOUNT:
@@ -50,6 +52,7 @@ class Utilities {
     /**
      * Convert Solution to array of variables.
      * Cannot extract directly
+     *
      * @param solution
      * @return array of variables in solution
      */
@@ -68,6 +71,7 @@ class Utilities {
 
     /**
      * Sum up equal robot genes in genome
+     *
      * @param genome
      * @return
      */
@@ -92,6 +96,7 @@ class Utilities {
 
     /**
      * Simple l0 Sparsity meassure
+     *
      * @param genome
      * @return
      */
@@ -107,6 +112,7 @@ class Utilities {
 
     /**
      * Use Hamming distance between every gene in genome for sparsity
+     *
      * @param g
      * @return
      */

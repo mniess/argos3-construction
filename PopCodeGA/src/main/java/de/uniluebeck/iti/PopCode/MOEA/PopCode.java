@@ -76,6 +76,9 @@ public class PopCode extends AbstractProblem {
                 counter = addSimpleGenome(solution, counter);
                 addCounts(solution, counter);
                 break;
+            case FULL:
+                addFullGenome(solution, counter);
+                break;
             case FULLCOUNT:
                 counter = addFullGenome(solution, counter);
                 addCounts(solution, counter);
