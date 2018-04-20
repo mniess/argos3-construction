@@ -21,7 +21,7 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std:
       &cLoopFunctions = dynamic_cast<CConstructionLoopFunctions &>(cSimulator.GetLoopFunctions());
 
   cLoopFunctions.ConfigureFromGenome(genome, length, genomeType);
-  Real performance = 42;
+  Real performance;
   for (size_t i = 0; i < evaluations; ++i) {
     try {
       cLoopFunctions.SetTrial(i);
@@ -30,7 +30,7 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std:
       cSimulator.Reset(seed*evaluations + i);
 
       cSimulator.Execute();
-      performance = Min(performance, cLoopFunctions.Performance());
+      performance = cLoopFunctions.cylinderCoverage();// + cLoopFunctions.robotFracInCircle();
     } catch (CARGoSException &ex) {
     }
   }
@@ -98,7 +98,7 @@ int main(int argc, const char *argv[]) {
   //Set genome
   genome = fullGene;
 
-  std::cout << c.LaunchArgos(genome, 150, 1, "fullCount",0);
+  std::cout << c.LaunchArgos(genome, 150, 1, "full",0);
   //std::cout << c.LaunchArgos(genome,80,1,"");
   LOG.Flush();
   //c.DestroyArgos();

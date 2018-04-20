@@ -4,7 +4,6 @@
 #include <argos3/plugins/simulator/entities/cylinder_entity.h>
 
 #include <list>
-#include <string>
 #include <controllers/footbot_construction/footbot_construction.h>
 
 /****************************************/
@@ -123,9 +122,10 @@ void CConstructionLoopFunctions::PreStep() {
 void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, std::string genomeType) {
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   int singleGenomeLength = 8;
-  if (genomeType.find("full") != std::string::npos) {
+  if (genomeType.find("full") != std::string::npos || genomeType.find("Full") != std::string::npos) {
     singleGenomeLength = 15;
   }
+  LOG << "Using genome Length " << singleGenomeLength << std::endl;
   if (tFBMap.size() * singleGenomeLength == length) {
     int i = 0;
     for (auto const &it : tFBMap) {
@@ -142,7 +142,7 @@ void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, s
 
 }
 
-Real CConstructionLoopFunctions::Performance() {
+Real CConstructionLoopFunctions::cylinderCoverage() {
   std::list<CVector2> validCylinders;
   Real rayCastHit = 0;
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
@@ -155,7 +155,6 @@ Real CConstructionLoopFunctions::Performance() {
     CVector2 cylinderPos;
 
     pcC->GetEmbodiedEntity().GetOriginAnchor().Position.ProjectOntoXY(cylinderPos);
-    LOG << pcC->GetContext();
     if (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(cylinderPos.Length())) {
       validCylinders.push_back(cylinderPos);
     }
@@ -168,6 +167,7 @@ Real CConstructionLoopFunctions::Performance() {
     for (CVector2 currCyl:validCylinders) {
       Real dot = currCyl.DotProduct(rayCast);
       if (dot < 0) {
+        /*cylinder is at back of ray*/
         continue;
       }
       CVector2 nearesPoint = CVector2(dot, rayCastAngle);
@@ -180,6 +180,24 @@ Real CConstructionLoopFunctions::Performance() {
   }
   LOG << rayCastHit / 3.6 << "% (" << validCylinders.size() << " Cylinders, " << rayCastHit << " Hits)" << std::endl;
   return rayCastHit / 360.0;
+}
+
+Real CConstructionLoopFunctions::robotFracInCircle() {
+  Real robotsInCircle = 0;
+  CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
+  for (auto &it : tFBMap) {
+    /* Create a pointer to the current foot-bot */
+    CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it.second);
+
+    CVector2 position;
+    pcFB->GetEmbodiedEntity().GetOriginAnchor().Position.ProjectOntoXY(position);
+
+    if (position.Length() < m_sConstructionParams.buildingRange.GetMin()) {
+      robotsInCircle++;
+    }
+  }
+  LOG << robotsInCircle*100/m_sConstructionParams.numRobots  << "% of robots in building" << std::endl;
+  return robotsInCircle/m_sConstructionParams.numRobots;
 }
 
 /****************************************/

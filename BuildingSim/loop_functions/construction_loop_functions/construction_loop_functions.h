@@ -28,7 +28,9 @@ public:
   virtual void PostExperiment();
   virtual CColor GetFloorColor(const CVector2 &c_position_on_plane);
   virtual void PreStep();
-  Real Performance();
+
+  Real cylinderCoverage();
+  Real robotFracInCircle();
 
   inline void SetTrial(size_t un_trial) {
     m_unCurrentTrial = un_trial;
@@ -45,6 +47,7 @@ private:
   CRandom::CRNG *m_pcRNG;
 
   void SetRandomPos(CEmbodiedEntity &e);
+
 };
 
 #endif
