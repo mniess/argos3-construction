@@ -5,23 +5,35 @@
 
 #include <de_uniluebeck_iti_PopCode_MOEA_PopCode.h>
 
-JNIEXPORT jdouble JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_LaunchArgos(JNIEnv *env,
+JNIEXPORT jdoubleArray JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_LaunchArgos(JNIEnv *env,
                                                                                        jobject,
                                                                                        jintArray p_array,
                                                                                        jint evals,
                                                                                        jstring genomeType,
                                                                                        jint seed) {
-  /* Return the negative result of the evaluation because nsgaII is minimizing*/
+  //Create genome array
   jsize len = env->GetArrayLength(p_array);
   jint *body = env->GetIntArrayElements(p_array, nullptr);
   int genome[len];
   std::copy(body, body + len, genome);
   env->ReleaseIntArrayElements(p_array, body, 0);
 
+  //Get GenomeType String
   const char *cstrGenomeType = env->GetStringUTFChars(genomeType, 0);
   std::string strGenomeType = std::string(cstrGenomeType);
   env->ReleaseStringUTFChars(genomeType, cstrGenomeType);
-  return ArgosControl::GetInstance().LaunchArgos(genome, len, evals, strGenomeType, seed);
+
+  //Run
+  double *results = ArgosControl::GetInstance().LaunchArgos(genome, len, evals, strGenomeType, seed);
+  std::cout << results[0] << " reslults2: " << results[1] << std::endl;
+  //Convert results to JavaArray
+  jboolean isCopy;
+  jdoubleArray jOutput = env->NewDoubleArray(2);
+  jdouble jArrayElems[2];
+  jArrayElems[0] = results[0];
+  jArrayElems[1] = results[1];
+  env->SetDoubleArrayRegion(jOutput, 0, 2, jArrayElems);
+  return jOutput;
 }
 
 JNIEXPORT jint JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_InitArgos(JNIEnv *, jobject) {

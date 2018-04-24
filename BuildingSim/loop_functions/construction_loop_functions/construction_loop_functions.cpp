@@ -30,19 +30,14 @@ void CConstructionLoopFunctions::Init(TConfigurationNode &t_node) {
     CFootBotEntity *m_pcFootBot = new CFootBotEntity(id, "ffc");
     AddEntity(*m_pcFootBot);
   }
+  accLight = 0;
 }
 
 /****************************************/
 /****************************************/
 
 void CConstructionLoopFunctions::Reset() {
-  //New Positions for every Run
-/*  for (int i = 0; i < m_sConstructionParams.numRobots; ++i) {
-    std::string id = "fb" + ToString(i);
-
-    CFootBotEntity bot = dynamic_cast<CFootBotEntity&>(GetSpace().GetEntity(id));
-    SetRandomPos(bot.GetEmbodiedEntity());
-  }*/
+  accLight = 0;
 
   CSpace::TMapPerType &tCMap = GetSpace().GetEntitiesByType("cylinder");
   for (auto &it : tCMap) {
@@ -117,6 +112,8 @@ void CConstructionLoopFunctions::PreStep() {
       }
     }
   }
+  accLight += robotLightPerformance();
+  LOG << accLight << std::endl;
 }
 
 void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, std::string genomeType) {
@@ -182,22 +179,20 @@ Real CConstructionLoopFunctions::cylinderCoverage() {
   return rayCastHit / 360.0;
 }
 
-Real CConstructionLoopFunctions::robotFracInCircle() {
-  Real robotsInCircle = 0;
+Real CConstructionLoopFunctions::robotLightPerformance() {
+  Real performance = 0;
   CSpace::TMapPerType &tFBMap = GetSpace().GetEntitiesByType("foot-bot");
   for (auto &it : tFBMap) {
     /* Create a pointer to the current foot-bot */
     CFootBotEntity *pcFB = any_cast<CFootBotEntity *>(it.second);
 
     CVector2 position;
-    pcFB->GetEmbodiedEntity().GetOriginAnchor().Position.ProjectOntoXY(position);
-
-    if (position.Length() < m_sConstructionParams.buildingRange.GetMin()) {
-      robotsInCircle++;
-    }
+    Real distToLight = pcFB->GetEmbodiedEntity().GetOriginAnchor().Position.ProjectOntoXY(position).Length();
+    Real lightIntensity = 1 / (distToLight * distToLight);
+    if(lightIntensity>100) lightIntensity = 100; //cap light intensity
+    performance += lightIntensity;
   }
-  LOG << robotsInCircle*100/m_sConstructionParams.numRobots  << "% of robots in building" << std::endl;
-  return robotsInCircle/m_sConstructionParams.numRobots;
+  return performance / m_sConstructionParams.numRobots;
 }
 
 /****************************************/

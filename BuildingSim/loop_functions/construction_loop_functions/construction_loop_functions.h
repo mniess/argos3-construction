@@ -30,7 +30,8 @@ public:
   virtual void PreStep();
 
   Real cylinderCoverage();
-  Real robotFracInCircle();
+  Real robotLightPerformance();
+  inline Real getAccLight() { return accLight; }
 
   inline void SetTrial(size_t un_trial) {
     m_unCurrentTrial = un_trial;
@@ -43,6 +44,9 @@ private:
   SConstructionParams m_sConstructionParams;
 
   size_t m_unCurrentTrial;
+
+  //light accumulated by robots
+  Real accLight;
 
   CRandom::CRNG *m_pcRNG;
 

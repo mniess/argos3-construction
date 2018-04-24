@@ -37,7 +37,7 @@ public class Run {
         logger.saveResults(solutions);
 
         for (Solution solution : solutions) {
-            System.out.printf("=> %.5f ; %.5f\n", solution.getObjective(0), solution.getObjective(1));
+            System.out.printf("=> %.5f; %.5f; %.5f\n", solution.getObjective(0), solution.getObjective(1), solution.getObjective(2));
         }
 
         plot(solutions);
@@ -68,8 +68,6 @@ public class Run {
         Variation variation = new GAVariation(
                 new OnePointCrossover(s.crossoverProb),
                 new BitFlip(s.mutationProb));
-                //new SBX(1.0, 25.0),
-                //new PM(1.0 / problem.getNumberOfVariables(), 30.0));
 
         Algorithm algorithm = new NSGAII(
                 problem,

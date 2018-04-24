@@ -13,7 +13,7 @@ void ArgosControl::InitArgos() {
   cSimulator.LoadExperiment();
 }
 
-double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std::string genomeType, int seed) {
+double* ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std::string genomeType, int seed) {
 
   static argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
   /* Get a reference to the loop functions */
@@ -21,7 +21,7 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std:
       &cLoopFunctions = dynamic_cast<CConstructionLoopFunctions &>(cSimulator.GetLoopFunctions());
 
   cLoopFunctions.ConfigureFromGenome(genome, length, genomeType);
-  Real performance;
+  Real* performance = new Real[2];
   for (size_t i = 0; i < evaluations; ++i) {
     try {
       cLoopFunctions.SetTrial(i);
@@ -30,7 +30,9 @@ double ArgosControl::LaunchArgos(int genome[], int length, int evaluations, std:
       cSimulator.Reset(seed*evaluations + i);
 
       cSimulator.Execute();
-      performance = cLoopFunctions.cylinderCoverage();// + cLoopFunctions.robotFracInCircle();
+      performance[0] = cLoopFunctions.cylinderCoverage();
+      performance[1] = cLoopFunctions.getAccLight();
+      std::cout << "from cLoopFunctions: getAccLight()=" << cLoopFunctions.getAccLight() << std::endl;
     } catch (CARGoSException &ex) {
     }
   }
@@ -49,7 +51,7 @@ int main(int argc, const char *argv[]) {
   // minTime , Drop, minTime, Cyl, Drop, lowLight, highLight, Drop
   ArgosControl &c = ArgosControl::GetInstance();
   argos::CSimulator &cSimulator = argos::CSimulator::GetInstance();
-  cSimulator.SetExperimentFileName("experiments/construction.argos");
+  cSimulator.SetExperimentFileName("experiments/construction-nsga2.argos");
   cSimulator.LoadExperiment();
   int manualGene[80] = {4, 1, 0, 1, 0, 3, 4, 1,
                         4, 1, 0, 1, 0, 3, 4, 1,
@@ -98,7 +100,7 @@ int main(int argc, const char *argv[]) {
   //Set genome
   genome = fullGene;
 
-  std::cout << c.LaunchArgos(genome, 150, 1, "full",0);
+  std::cout << c.LaunchArgos(genome, 150, 5, "full",0);
   //std::cout << c.LaunchArgos(genome,80,1,"");
   LOG.Flush();
   //c.DestroyArgos();

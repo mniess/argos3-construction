@@ -26,7 +26,7 @@ public class PopCode extends AbstractProblem {
         InitArgos();
     }
 
-    native double LaunchArgos(int[] genome, int evaluations, String genomeType, int seed);
+    native double[] LaunchArgos(int[] genome, int evaluations, String genomeType, int seed);
 
     native int InitArgos();
 
@@ -44,21 +44,23 @@ public class PopCode extends AbstractProblem {
         try {
             //Create RNA from DNA
             int[] genome = Utilities.getGenome(solution);
-            double fitness = -1;
+            double[] fitness = {0, 0};
             try {
                 fitness = LaunchArgos(genome, settings.evaluations, settings.gType.toString(), run.get());
             } catch (Exception e) {
-                logger.err("Error with getting results in evaluation " + run.get() + ". Writing " + fitness + " as Fitness...");
+                logger.err("Error with getting results in evaluation " + run.get() + ". Writing " + fitness[0] + " as Fitness...");
             }
             //Calc sparsity
             double sparsity = Utilities.hammingSparsity(genome);
             //Set it
-            solution.setObjective(0, -fitness);
-            solution.setObjective(1, -sparsity);
+            solution.setObjective(0, -fitness[0]);
+            solution.setObjective(1, -fitness[1]);
+            solution.setObjective(2, -sparsity);
 
-            System.out.printf("%d: fitness=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness, sparsity, Arrays.toString(genome));
+            System.out.printf("%d: cylCoverage=%.2f, lightsum=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness[0], fitness[1], sparsity, Arrays.toString(genome));
         } catch (Exception e) {
-            logger.err(e.getMessage());
+            e.printStackTrace();
+            logger.err("Eval exception: " + e.getMessage());
         }
     }
 
@@ -66,7 +68,7 @@ public class PopCode extends AbstractProblem {
      * Create a new Solution depending on the selected GENOME, all Variables are BINARY! Choose selection&variation accordingly
      */
     public Solution newSolution() {
-        Solution solution = new Solution(Utilities.GAgenomeSize, 2);
+        Solution solution = new Solution(Utilities.GAgenomeSize, 3);
         int counter = 0;
         switch (settings.gType) {
             case SIMPLE:
