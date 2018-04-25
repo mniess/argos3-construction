@@ -9,8 +9,9 @@ import java.util.Properties;
  */
 class Settings {
     // Number of robots in each simulation
-    //TODO migrate to Buildingsim experiment files
     final int numRobots;
+    // should be copied from .argos-Settings file
+    final int simulationTicks;
 
     //Number of simulations in each generation
     final int populationSize;
@@ -51,6 +52,7 @@ class Settings {
         }
 
         numRobots = Integer.parseInt((String) prop.getOrDefault("numRobots", "10"));
+        simulationTicks = Integer.parseInt((String) prop.getOrDefault("simulationTicks", "2000"));
         populationSize = Integer.parseInt((String) prop.getOrDefault("populationSize", "100"));
         generations = Integer.parseInt((String) prop.getOrDefault("generations", "1000"));
         evaluations = Integer.parseInt((String) prop.getOrDefault("evaluations", "3"));
@@ -68,7 +70,8 @@ class Settings {
      */
     void print() {
         System.out.print("numRobots=" + numRobots +
-                "\nPopulationSize=" + populationSize +
+                "\nsimulationTicks=" + simulationTicks +
+                "\npopulationSize=" + populationSize +
                 "\ngenerations=" + generations +
                 "\nevaluations=" + evaluations +
                 "\ntournamentSize=" + tournamentSize +

@@ -52,7 +52,7 @@ public class Run {
         Problem problem = new PopCode(s, logger);
 
         //Create HyperVolume
-        double[] idealPoint = {-1, -1, -70000}; //Light bestcase 35 per Tick
+        double[] idealPoint = {-1, -1, -s.simulationTicks * 35}; //Light bestcase 35 per Tick
         double[] referencePoint = {1, 1, 1}; //some distance from worst case {0,0}
         Hypervolume hypervolume = new Hypervolume(problem, idealPoint, referencePoint);
 
