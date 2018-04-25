@@ -25,7 +25,7 @@ JNIEXPORT jdoubleArray JNICALL Java_de_uniluebeck_iti_PopCode_MOEA_PopCode_Launc
 
   //Run
   double *results = ArgosControl::GetInstance().LaunchArgos(genome, len, evals, strGenomeType, seed);
-  std::cout << results[0] << " reslults2: " << results[1] << std::endl;
+
   //Convert results to JavaArray
   jboolean isCopy;
   jdoubleArray jOutput = env->NewDoubleArray(2);

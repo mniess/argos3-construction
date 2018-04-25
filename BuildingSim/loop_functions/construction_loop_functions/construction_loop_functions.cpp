@@ -113,7 +113,6 @@ void CConstructionLoopFunctions::PreStep() {
     }
   }
   accLight += robotLightPerformance();
-  LOG << accLight << std::endl;
 }
 
 void CConstructionLoopFunctions::ConfigureFromGenome(int genome[], int length, std::string genomeType) {

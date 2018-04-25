@@ -20,7 +20,7 @@ public class PopCode extends AbstractProblem {
 
 
     public PopCode(Settings settings, Logger logger) {
-        super(Utilities.GAgenomeSize, 2);
+        super(Utilities.GAgenomeSize, 3);
         this.settings = settings;
         this.logger = logger;
         InitArgos();
