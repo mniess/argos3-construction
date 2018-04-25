@@ -58,8 +58,14 @@ void CConstructionLoopFunctions::Reset() {
 }
 
 void CConstructionLoopFunctions::SetRandomPos(CEmbodiedEntity &e) {
-  CVector3 pos =
-      CVector3(m_pcRNG->Uniform(m_sConstructionParams.arenaX), m_pcRNG->Uniform(m_sConstructionParams.arenaY), 0);
+  Real x = m_pcRNG->Uniform(m_sConstructionParams.arenaX);
+  Real y = m_pcRNG->Uniform(m_sConstructionParams.arenaY);
+
+  while (m_sConstructionParams.buildingRange.WithinMinBoundIncludedMaxBoundIncluded(CVector2(x, y).Length())) {
+    x = m_pcRNG->Uniform(m_sConstructionParams.arenaX);
+    y = m_pcRNG->Uniform(m_sConstructionParams.arenaY);
+  }
+  CVector3 pos = CVector3(x, y, 0);
   CQuaternion cq_orientation;
   cq_orientation.FromEulerAngles(m_pcRNG->Uniform(CRadians::UNSIGNED_RANGE), CRadians::ZERO, CRadians::ZERO);
   MoveEntity(e, pos, cq_orientation, false);
@@ -196,8 +202,8 @@ Real CConstructionLoopFunctions::robotFracInCircle() {
       robotsInCircle++;
     }
   }
-  LOG << robotsInCircle*100/m_sConstructionParams.numRobots  << "% of robots in building" << std::endl;
-  return robotsInCircle/m_sConstructionParams.numRobots;
+  LOG << robotsInCircle * 100 / m_sConstructionParams.numRobots << "% of robots in building" << std::endl;
+  return robotsInCircle / m_sConstructionParams.numRobots;
 }
 
 /****************************************/
