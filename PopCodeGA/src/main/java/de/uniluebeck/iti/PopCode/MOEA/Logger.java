@@ -60,8 +60,9 @@ class Logger {
             for (Solution s : solutions) {
                 writer.write(nfe + "; ");
                 writer.write(hypervolume + "; ");
-                writer.write(s.getObjective(0) + "; ");
-                writer.write(s.getObjective(1) + "; ");
+                writer.write(s.getObjective(0) + "; "); //Cylinder Coverage
+                writer.write(s.getObjective(1) + "; "); //Light amount
+                writer.write(s.getObjective(2) + "; "); //Sparsity
                 writer.write(Arrays.toString(Utilities.getGenome(s)) + "; ");
                 writer.write("\n");
             }
