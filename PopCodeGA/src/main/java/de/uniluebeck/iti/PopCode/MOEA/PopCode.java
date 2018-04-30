@@ -54,7 +54,7 @@ public class PopCode extends AbstractProblem {
             double sparsity = Utilities.hammingSparsity(genome);
             //Set it
             solution.setObjective(0, -fitness[0]);
-            solution.setObjective(1, -fitness[1]);
+            solution.setObjective(1, fitness[1]);
             solution.setObjective(2, -sparsity);
 
             System.out.printf("%d: cylCoverage=%.2f, lightsum=%.2f, sparsity=%.2f, genome=%s%n", run.incrementAndGet(), fitness[0], fitness[1], sparsity, Arrays.toString(genome));
