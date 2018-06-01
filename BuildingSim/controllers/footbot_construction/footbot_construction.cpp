@@ -443,7 +443,7 @@ void CFootBotConstruction::SetRules(int rules[], std::string genomeType) {
   Real LightFactor = maxLight / maxLightGene;
   Real TimeFactor = (maxTime / maxTimeGene) * CPhysicsEngine::GetInverseSimulationClockTick();
   //SRule(int minT, int cInR, int minL, int maxL, bool d)
-  if (genomeType == "fullCount") {
+  if (genomeType.find("full") != std::string::npos || genomeType.find("Full") != std::string::npos) {
     AntiPhototaxisExploreRule = SRule(rules[0]* TimeFactor,rules[1],rules[2] * LightFactor, rules[3] * LightFactor, rules[4] == 1);
     ExplorePhototaxisRule = SRule(rules[5]* TimeFactor,rules[6],rules[7] * LightFactor, rules[8] * LightFactor, rules[9] == 1);
     PhototaxisAntiphototaxisRule = SRule(rules[10]* TimeFactor,rules[11],rules[12] * LightFactor, rules[13] * LightFactor, rules[14] == 1);
