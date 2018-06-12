@@ -69,3 +69,37 @@ Direct with unconfigured genome. See also [ARGoS3-experiments](https://github.co
 1. `$ cd [gitroot]/BuildingSim`
 1. `$ argos3 -c experiments/construction.argos`
 
+##Logs
+
+During a evolutionary run the following temporary files are created.
+All files have the same prefix. This prefix is the hostname if the run script is used, or "argos" otherwirse:
+* [prefix]_stats.txt: Information about this run. Usefull for many different runs
+* [prefix]_checkpoint.dat: A checkpoint file that is used if a run was interrupted. It is automatically deleted after a succesfull run. Delete this if you want to completely restart a run.
+* [prefix]_Solutions.dat: Binary file created by the MOEA framework. Use this to load the final solutions into MOEA again for analysis.
+* [prefix]_Objectives.dat: Objectives of all final solutions
+* [prefix]_log.txt: A extensive log about solutions in every generation
+
+All files are generated in the same folder the programm was started in. After the algorithm is finished, the files are copied to the ''resultPath'' specified in the config file.
+
+### Console ouput
+
+At start the current settings are printed.
+
+The console prints solutionnumber, cylinderCoverage, sparsity, (accumulated Light) and the current genome of each solution that is evaluated.
+Additionally the coverage of each simulation during evaluation is printed. How many evaluations per solution are done, is configured with the "evaluations" parameter.
+
+There will be ''generations'' * ''populationSize'' many solutions, each with its own line.
+
+Similar information is written to the log.txt
+
+### log.txt
+In the [prefix]_log.txt the following data is safed in csv format.
+Each line represents a solution with the following data:
+1. last evaluation number of the generation: divide by ''populationSize'' to get the generation
+1. hypervolume: the hypervolume of the generation
+1. obejctive: Cylinder coverage
+1. (objective: accumulated light): only used in the ''lightPeformance'' branch
+1. objective: sparsity of the swarm
+1. Genome: the genome used for the robots. You can copy-paste this into the ''argosControl.cpp'' to see the swarm in action.
+
+Objectives are negated because the MOEA algorithms are minimizing.
