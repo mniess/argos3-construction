@@ -69,7 +69,7 @@ Direct with unconfigured genome. See also [ARGoS3-experiments](https://github.co
 1. `$ cd [gitroot]/BuildingSim`
 1. `$ argos3 -c experiments/construction.argos`
 
-##Logs
+## Logs
 
 During a evolutionary run the following temporary files are created.
 All files have the same prefix. This prefix is the hostname if the run script is used, or "argos" otherwirse:
