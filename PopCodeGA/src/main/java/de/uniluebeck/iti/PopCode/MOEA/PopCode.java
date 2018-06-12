@@ -5,10 +5,12 @@ import org.moeaframework.core.variable.BinaryIntegerVariable;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Actual problem class.
+ */
 public class PopCode extends AbstractProblem {
 
     private Logger logger;
@@ -32,7 +34,7 @@ public class PopCode extends AbstractProblem {
 
     native int DestroyArgos();
 
-    //Evaluation counter for logging purposes
+    //Evaluation counter for logging
     private AtomicInteger run = new AtomicInteger(0);
 
     /**
@@ -62,8 +64,10 @@ public class PopCode extends AbstractProblem {
         }
     }
 
-    /*
-     * Create a new Solution depending on the selected GENOME, all Variables are BINARY! Choose selection&variation accordingly
+    /**
+     * Create a new Solution depending on the selected @GENOME, all Variables are BINARY!
+     * Choose selection&variation accordingly
+     * @return
      */
     public Solution newSolution() {
         Solution solution = new Solution(Utilities.GAgenomeSize, 2);

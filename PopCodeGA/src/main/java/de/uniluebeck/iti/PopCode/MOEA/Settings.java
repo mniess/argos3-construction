@@ -9,7 +9,6 @@ import java.util.Properties;
  */
 class Settings {
     // Number of robots in each simulation
-    //TODO migrate to Buildingsim experiment files
     final int numRobots;
 
     //Number of simulations in each generation
@@ -39,7 +38,7 @@ class Settings {
             input = new FileInputStream(filename);
             prop.load(input);
         } catch (IOException e) {
-            System.err.println(filename + " not found!");
+            System.err.println(filename + " not found! Using defaults.");
         } finally {
             if (input != null) {
                 try {

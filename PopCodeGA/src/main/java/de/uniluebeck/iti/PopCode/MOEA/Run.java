@@ -68,8 +68,6 @@ public class Run {
         Variation variation = new GAVariation(
                 new OnePointCrossover(s.crossoverProb),
                 new BitFlip(s.mutationProb));
-                //new SBX(1.0, 25.0),
-                //new PM(1.0 / problem.getNumberOfVariables(), 30.0));
 
         Algorithm algorithm = new NSGAII(
                 problem,
@@ -92,10 +90,6 @@ public class Run {
         return algorithm.getResult();
     }
 
-    private static void evalSaved(Logger logger) {
-        Population pop = logger.loadResults();
-        plot(pop);
-    }
 
     //Use MOEA Plot function for instant visualization
     private static void plot(Population solutions) {
